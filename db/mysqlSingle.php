@@ -4,21 +4,14 @@
  * User: kod
  * Date: 14-9-4
  * Time: 上午12:30
- * uid=JuYY2WbaxflpbZaNLC2Awg&nid=0&
- * vid=wo/ciKVG/qWtZdbAEuaM2Q&
- * vn=3&
- * pvn=2&
- * sact=1411314818967&
- * to_flag=0&
- * pl=x/LYjHg9EAttGcec0-rmtw*pt*1411314818967
  */
-abstract class db_mysqlSingle{
+abstract class kod_db_mysqlSingle{
 	protected $dbName = KOD_COMMENT_MYSQLDB;
 	protected $tableName;
 	protected $key = "";//当存在主键的时候，可以根据主键调用一些快捷函数
 	private $dbHandle;
 	function __construct(){
-		$this->dbHandle = new db_mysqlDB($this->dbName);
+		$this->dbHandle = new kod_db_mysqlDB($this->dbName);
 	}
 	static function create(){
 		$temp = get_called_class();

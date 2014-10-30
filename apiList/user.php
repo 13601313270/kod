@@ -5,7 +5,8 @@
  * Date: 14-9-8
  * Time: 下午12:13
  */
-class apiList_user extends db_mysqlSingle{
+class kod_apiList_user extends kod_db_mysqlSingle{
+	protected $dbName = "user";
 	public $tableName = "user";
 	//public $key = "";
 	public function getAllUser(){
