@@ -150,7 +150,8 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 		*/
 		//获取总数
 		$countSearchArr = $searchArr;
-		$dataCount = $dbHandle->getCount()->getList($countSearchArr);
+		$countSearchArr['select'] = 'count(*) as count';
+		$dataCount = $dbHandle->getList($countSearchArr);
 
 		//获取数据
 		$select = array();
@@ -162,7 +163,6 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 		$searchArr['select'] = implode(',',$select);
 		$searchArr['limit'] = ($page*$this->pagePer).','.$this->pagePer;
 		$dataList = $dbHandle->getList($searchArr);
-
 		$dataHtml = [];
 		foreach($dataList as $k=>$data){
 			foreach($data as $columnKey=>$columnVal){
@@ -187,7 +187,7 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 		echo json_encode(array(
 			'data'=>$dataList,
 			'dataHtml'=>$dataHtml,
-			'dataCount'=>$dataCount,
+			'dataCount'=>intval($dataCount[0]['count']),
 		));exit;
 	}
 	public function insertData($data){
@@ -238,33 +238,36 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 	}
 	public function updateAll($where,$column,$runType,$replaceType,$searchText,$replaceText){
 		$dbHandle = $this->getMysqlDbHandle();
-		if($replaceType=='replacePart') {
-			if ($runType == 'keys') {
+		if($runType=='keys'){
+			if($replaceType=='replacePart'){
 				$replaceCount = 0;
-				$data = $dbHandle->onlyColumn(array($dbHandle->getKeyColumnName(), $column))->getByKeys($where[$dbHandle->getKeyColumnName()]);
-			} else {
-				$searchArr = array();
-				if(!empty($where)){
-					$searchArr['where'] = array_values($where);
-				}
-				$searchArr['where'][] = $column . ' like "%' . $searchText . '%"';
-				$data = $dbHandle->onlyColumn(array($dbHandle->getKeyColumnName(), $column))->getList($searchArr);
-			}
-			if(count($data)>0){
-				foreach ($data as $item) {
-					if (strpos($item[$column], $searchText) > -1) {
+				$data = $dbHandle->onlyColumn(array($dbHandle->getKeyColumnName(),$column))->getByKeys($where[$dbHandle->getKeyColumnName()]);
+				foreach($data as $item){
+					if(strpos($item[$column],$searchText)>-1){
 						$replaceArr = array();
-						$replaceArr[$column] = str_replace($searchText, $replaceText, $item[$column]);
-						$upArr = array();
-						$upArr[$dbHandle->getKeyColumnName()] = $item[$dbHandle->getKeyColumnName()];
-						if ($dbHandle->update($upArr, $replaceArr)) {
+						$replaceArr[$column] = str_replace($searchText,$replaceText,$item[$column]);
+						if($dbHandle->update($dbHandle->getKeyColumnName().'="'.$item[$dbHandle->getKeyColumnName()].'"' , $replaceArr)){
 							$replaceCount++;
 						}
 					}
 				}
+				echo $replaceCount."条被替换";exit;
 			}
-			echo $replaceCount . "条被替换";exit;
+		}else{
+			$searchArr = array(
+				'where'=>array_values($where)
+			);
+			print_r($searchArr);exit;
+			$temp = $dbHandle->onlyColumn('count(*) as count')->getList($searchArr);
+			print_r($temp);
+			print_r($searchArr);
 		}
+
+		exit;
+		echo $dbHandle->sql()->getList(array(
+			'keyWord'=>array('写人的作文','写人的作文'),
+		));
+
 		exit;
 	}
 }
