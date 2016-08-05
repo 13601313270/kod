@@ -274,6 +274,20 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 
 /*demo*/
 /*
+final class temp extends oldArticle{
+	final public function getList($arr){
+		return parent::getList($arr);
+	}
+	final public function insert($params,$mysql_insert_id = false){
+		return parent::insert($params,false);
+	}
+	final public function update($where,$params){
+		return parent::update($where,$params);
+	}
+	final public function deleteById($id){
+		return parent::deleteById($id);
+	}
+}
 class a extends kod_web_mysqlAdmin{
 	public function getMysqlDbHandle(){
 		return new temp();

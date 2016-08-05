@@ -16,6 +16,18 @@ abstract class kod_web_httpObject{
 	public function afterFetchContent($content){
 		$this->afterFetchHtml[] = $content;
 	}
+	protected function getFuncNameAndParams($allParams){
+		if(isset($allParams["function"])){
+			$funcName = $allParams["function"];
+		}else{
+			$funcName = "main";
+		}
+		unset($allParams['function']);
+		return array(
+			'function'=>$funcName,
+			'params'=>$allParams,
+		);
+	}
 	final public function run($allowMethod_="GET,POST"){//$_GET $_POST $_COOKIE $_REQUEST $_FILES
 		$allowMethod = explode(",",$allowMethod_);
 		$allParams = array();//所有网址输入的参数值
@@ -25,11 +37,9 @@ abstract class kod_web_httpObject{
 		if(isset($GLOBALS['_TEST'])){
 			$allParams = array_merge($allParams,$GLOBALS['_TEST']);
 		}
-		if(isset($allParams["function"])){
-			$funcName = $allParams["function"];
-		}else{
-			$funcName = "main";
-		}
+		$runInfo = $this->getFuncNameAndParams($allParams);
+		$funcName = $runInfo['function'];
+		$allParams = $runInfo['params'];
 		try{
 			$method = new ReflectionMethod($this,$funcName);
 		}catch(Exception $e){
