@@ -310,7 +310,6 @@ abstract class Smarty_Internal_TemplateBase extends Smarty_Internal_Data
 		if (isset($this->error_reporting)) {
 			error_reporting($_smarty_old_error_level);
 		}
-		$_output = $this->beforeDisplay($_output);
 		// 渲染页面，或者返回生成的html字符串
         if ($display) {//渲染页面
             if ($this->caching && $this->cache_modified_check) {//如果设置了缓存，设置http的头部何其他的一些全局变量
@@ -374,10 +373,6 @@ abstract class Smarty_Internal_TemplateBase extends Smarty_Internal_Data
             return $_output;
         }
     }
-	//渲染之前对生成的html进行修饰
-	public function beforeDisplay($_output){
-		return $_output;
-	}
 
     /**
      * displays a Smarty template

@@ -13,33 +13,6 @@ final class kod_smarty_smarty extends Smarty{
 		}
 		return parent::fetch($template, $cache_id, $compile_id, $parent, $display, $merge_tpl_vars, $no_output_filter);
 	}
-	//将渲染出的html进行加工
-	public function beforeDisplay($_output){
-		//将零散的css定义统一放到头部加载
-		/*
-		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is',$_output,$match);
-		if(strpos($_output,'</head>')>-1){
-			foreach($match[0] as $cssHtml){
-				$_output = str_replace($cssHtml,'',$_output);
-				$_output = str_replace('</head>',"\t".$cssHtml."\n</head>",$_output);
-			}
-		}
-		*/
-		if(KOD_REWRITE_HTML_LINK){
-			//把.php的文件，改为rewrite规则的文件
-			preg_match_all("/(<a[^\>]*href=[\"|\'])(.*?)([\"|\'][^\>]*>)/",$_output,$matchLink);
-			$_output = preg_replace_callback("/(<a[^\>]*href=[\"|\'])(.*?)([\"|\'][^\>]*>)/",function($matchLink){
-				$rewriteUrl = kod_web_rewrite::getUrlByPath($matchLink[2]);
-				if($rewriteUrl){
-					return $matchLink[1].$rewriteUrl.$matchLink[3];
-				}else{
-					return $matchLink[0];//如果没有匹配rewrite配置，则原样放回
-				}
-			},$_output);
-		}
-		return parent::beforeDisplay($_output);
-		return $_output;
-	}
 	public static $test = true;//是否是测试开发
 
 	//测试环境下追加的一些数据展示信息
@@ -186,6 +159,7 @@ final class kod_smarty_smarty extends Smarty{
 		//$allHtml = '<!--没有css2-->'.$allHtml;
 		return $allHtml;
 	}
+
 	//生成的php文件进行加工，再存入文件
 	public static function compilerAfter($content,$file){
 		//将零散的css定义统一放到头部加载
