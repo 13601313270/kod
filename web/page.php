@@ -6,8 +6,25 @@
  * Time: 下午3:23
  */
 
-class kod_web_page{
-	public static function output($_output,$template){
+class kod_web_page extends stdClass{
+	final public function __construct()
+	{
+		$this->beforeRun();
+	}
+
+	public function beforeRun(){
+
+	}
+	public function beforeFetch(){
+
+	}
+	public static function machiningTemplate($tpl_source, Smarty_Internal_Template $template){
+		return $tpl_source;
+	}
+	public static function machiningPHP($phoCode, Smarty_Internal_Template $template){
+		return $phoCode;
+	}
+	public static function machiningHtml($_output,$template){
 		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is',$_output,$match);
 		if(strpos($_output,'</head>')>-1){
 			foreach($match[0] as $cssHtml){
@@ -29,23 +46,27 @@ class kod_web_page{
 //		}
 		return $_output;
 	}
-	public function fetch($smartyTpl,$assiObj){
+	public function fetch($smartyTpl){
+		$this->beforeFetch();
 		$smartyObject = new kod_smarty_smarty();
 //		if(count($this->smartyPlutPath)>=1){
 //			foreach($this->smartyPlutPath as $k=>$v){
 //				$smartyObject->addPluginsDir($v);
 //			}
 //		}
+		$smartyObject->registerFilter('pre',array($this,'machiningTemplate'));
+		$smartyObject->registerFilter('post',array($this,'machiningPHP'));
+		$smartyObject->registerFilter('output',array($this,'machiningHtml'));
 
-		$smartyObject->registerFilter('output',array('kod_web_page','output'));
+
 		$smartyObject->compile_dir = KOD_SMARTY_COMPILR_DIR;//设置编译目录
 		//$smartyObject->template_dir = KOD_DIR_NAME."/testRun/";//设置模板目录
 		//$smartyObject->config_dir = "smarty/templates/config";//目录变量
 		//$smartyObject->cache_dir = "smarty/templates/cache"; //缓存文件夹
 
-		foreach($assiObj as $k=>$v){
+		foreach($this as $k=>$v){
 			$smartyObject->assign($k,$v);
 		}
-		$smartyObject->fetch($smartyTpl, null, null, null, true);
+		$smartyObject->display($smartyTpl);
 	}
 }
