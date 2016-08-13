@@ -11,6 +11,8 @@ final class kod_smarty_smarty extends Smarty{
 		if($this->compile_dir==null){
 			throw new Exception("您并未给Smarty的实例配置预编译文件存储路径属性compile_dir，请进行配置。您也可以在加载文件中配置静态变量【KOD_SMARTY_COMPILR_DIR】作为smarty的默认值",1);
 		}
+		$this->registerFilter('output',array('kod_smarty_smarty','outputFilter'));
+		$this->registerFilter('post',array('kod_smarty_smarty','afterFilter'));
 		return parent::fetch($template, $cache_id, $compile_id, $parent, $display, $merge_tpl_vars, $no_output_filter);
 	}
 	public static $test = true;//是否是测试开发
@@ -161,7 +163,7 @@ final class kod_smarty_smarty extends Smarty{
 	}
 
 	//生成的php文件进行加工，再存入文件
-	public static function compilerAfter($content,$file){
+	public static function afterFilter($content,$template){
 		//将零散的css定义统一放到头部加载
 		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is',$content,$match);
 		if(strpos($content,'</head>')>-1){
@@ -170,6 +172,7 @@ final class kod_smarty_smarty extends Smarty{
 				$content = str_replace('</head>',"\t".$cssHtml."\n</head>",$content);
 			}
 		}
+
 		//将零散的js定义统一放到头部加载
 		preg_match_all('/<script type="text\/javascript" src="(.*?)"><\/script>/is',$content,$match);
 		if(strpos($content,'</head>')>-1){
@@ -190,6 +193,29 @@ final class kod_smarty_smarty extends Smarty{
 		 	?></html>',$content);
 		*/
 		/*$content = str_replace("</html>",'<?php print_r($_smarty_tpl);?></html>',$content);*/
+
 		return $content;
+	}
+	public static function outputFilter($_output,$template){
+//		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is',$_output,$match);
+//		if(strpos($_output,'</head>')>-1){
+//			foreach($match[0] as $cssHtml){
+//				$_output = str_replace($cssHtml,'',$_output);
+//				$_output = str_replace('</head>',"\t".$cssHtml."\n</head>",$_output);
+//			}
+//		}
+//		if(KOD_REWRITE_HTML_LINK){
+//			//把.php的文件，改为rewrite规则的文件
+//			preg_match_all("/(<a[^\>]*href=[\"|\'])(.*?)([\"|\'][^\>]*>)/",$_output,$matchLink);
+//			$_output = preg_replace_callback("/(<a[^\>]*href=[\"|\'])(.*?)([\"|\'][^\>]*>)/",function($matchLink){
+//				$rewriteUrl = kod_web_rewrite::getUrlByPath($matchLink[2]);
+//				if($rewriteUrl){
+//					return $matchLink[1].$rewriteUrl.$matchLink[3];
+//				}else{
+//					return $matchLink[0];//如果没有匹配rewrite配置，则原样放回
+//				}
+//			},$_output);
+//		}
+		return $_output;
 	}
 }?>

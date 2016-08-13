@@ -186,9 +186,6 @@ class Smarty_Internal_Template extends Smarty_Internal_TemplateBase
         try {
             $code = $this->compiler->compileTemplate($this);
 			$code = kod_smarty_smarty::compilerIncludeTplHtml($code,$this->template_resource);
-			if($display){
-				$code = kod_smarty_smarty::compilerAfter($code,$this->template_resource);
-			}
         } catch (Exception $e) {
             // restore old timestamp in case of error
             if ($this->smarty->compile_locking && !$this->source->recompiled && $saved_timestamp) {
