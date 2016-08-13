@@ -87,18 +87,20 @@ class kod_tool_xmlData{
 	}
 
 	public static function getXmlByArray($datas,$tabCount = 0){
-		$return = "";$CDATAfind = array("<",">","&","'",'"',";");
+		$return = "";
 		foreach($datas as $k=>$each){
 			$key = $k;
 			if(gettype($each)=="array"){
 				if(array_values($each) === $each){//数组
 					if(count($each)==0){$return.="\n".self::echoTab($tabCount);
-						$return.="<$key>";$return.="</".self::removeAttr($key).">";
+						$return.="<$key>";
+						$return.="</".self::removeAttr($key).">";
 					}else{
 						foreach($each as $v){
 							if(in_array(gettype($v),array("string","integer"))){
 								$return.="\n".self::echoTab($tabCount);
 								$return.="<$key>";
+								//$v = preg_replace( '/[\x00-\x1F]/','',$v);
 								if(self::isNeedCDATA($v)){
 									$return.="<![CDATA[".$v."]]>";
 								}else{
