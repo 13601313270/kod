@@ -12,10 +12,10 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 		url('//at.alicdn.com/t/font_1449982954_687468.svg#iconfont') format('svg'); /* iOS 4.1- */
 	}
 	.updateHtml{
-		width: 100%;min-height:100%;background-color: rgba(55, 55, 55, 0.62);position:fixed;z-index:99;top: 0;left:0;
+		width: 100%;height:100%;background-color: rgba(55, 55, 55, 0.62);position:fixed;z-index:99;top: 0;left:0;
 	}
 	.updateHtml .updateHtmlContent{
-		background-color: white;width:90%;max-height: 100%;margin:10px auto 0 auto;padding:10px;border: solid 1px #d2d2d9;
+		background-color: white;width:90%;height: 100%;overflow-y:scroll;margin:10px auto 0 auto;padding:10px;border: solid 1px #d2d2d9;
 	}
 	.updateHtml .updateHtmlContent>table{
 		width:100%;
@@ -28,27 +28,135 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 	}
 	#fastTableInfo .deleteAll{
 		display: none;
-		left:0;
-		top:0;
 		position:fixed;
 		left:50%;
 		top:50%;
-		width:200px;
-		margin-left: -100px;
+		width:300px;
+		margin-left: -150px;
 		margin-top: -50px;
 		background-color: white;
-		border:solid 1px black;
-		padding: 10px;
-		border-radius: 2px;
-		height:100px;
+		box-shadow:0 0 40px black;
+	}
+	#fastTableInfo .updateAll{
+		position:fixed;
+		display: none;
+		top:0;
+		left:0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(129, 129, 129, 0.48);
+	}
+	#fastTableInfo .updateAll .updateAllPanel{
+		position:fixed;
+		left:50%;
+		top:50%;
+		width:500px;
+		margin-left: -250px;
+		margin-top: -100px;
+		background-color: white;
+		box-shadow:0 0 40px black;
 	}
 	#fastTableInfo .deleteAll>div{
 	}
 </style>
 <div id="fastTableInfo" class="container">
-	<div class="deleteAll">
-		<div>
-			<input type="button" value="删除">
+	<div class="deleteAll panel panel-default">
+		<div class="panel-heading">
+			<h3 class="panel-title">批量操作</h3>
+		</div>
+		<div class="panel-body">
+			<div class="deleteCount">选择<span></span>条记录</div>
+		</div>
+		<div class="panel-footer">
+			<input type="button" data-event="delete" class="btn btn-default" value="删除"/>
+			<input type="button" data-event="update" class="btn btn-default" value="修改" onclick="$('.updateAll').show()"/>
+		</div>
+	</div>
+	<div class="updateAll">
+		<div class="updateAllPanel panel panel-default">
+			<div class="panel-heading" style="height: 38px;">
+				<h3 class="panel-title" style="float: left;">批量修改</h3>
+				<span onclick="$(this).parents('.updateAll').hide()" class="glyphicon glyphicon-remove" aria-hidden="true" style="float:right;"></span>
+			</div>
+			<div class="panel-body">
+				<div>
+					<select datatype="column">
+						<option value="">选择字段</option>
+						{foreach $column as $k=>$v}
+							<option value="{$k}">{$v.title}</option>
+						{/foreach}
+					</select>
+					<span>|</span>
+					<select datatype="replaceType">
+						<option value="replacePart">包含替换</option>
+					</select>
+					<div style="margin-top: 10px;">
+						<div style="width: 48%;float: left;height: 50px;">
+							<textarea datatype="searchText" style="width: 100%;height:100%;"></textarea>
+						</div>
+						<div style="width: 4%;float: left;text-align: center;">
+							<span class="glyphicon glyphicon-arrow-right" style="line-height: 50px;" aria-hidden="true"></span>
+						</div>
+						<div style="width: 48%;float: left;height: 50px;">
+							<textarea datatype="replaceText" style="width: 100%;height:100%;"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="panel-footer">
+				<input type="button" data-event="updateAll" class="btn btn-default" value="执行"/>
+			</div>
+			<script>
+				$('#fastTableInfo .updateAll').on('click','[data-event=updateAll]',function(){
+					var tableBody = $(this).parents('.updateAllPanel').find('.panel-body');
+					var column = tableBody.find('[datatype=column]').val();
+					var replaceType = tableBody.find('[datatype=replaceType]').val();
+					var searchText = tableBody.find('[datatype=searchText]').val();
+					var replaceText = tableBody.find('[datatype=replaceText]').val();
+					if(column!='' && replaceType!='' && searchText!='' && replaceText!=''){
+						function run(searchArr,runType){
+							$.post('',{
+								function:'updateAll',
+								where:searchArr,
+								runType:runType,
+								column:column,
+								replaceType:replaceType,
+								searchText:searchText,
+								replaceText:replaceText,
+							},function(data){
+								alert(data);
+								mysqlAJAXClass.getList();
+								$('#fastTableInfo .updateAll').hide();
+								$('#fastTableInfo .deleteAll').hide();
+								$('#fastTableInfo table>thead>tr>th:eq(0)>:checkbox').attr('checked',false);
+								console.log(data);
+							});
+						}
+						if($(this).parents('#fastTableInfo').find('.deleteAll .panel-body .deleteCount select').val()=='allPage'){
+							var isHasSearch = false;
+							for(var i in searchArr){
+								isHasSearch = true;
+							}
+							if(isHasSearch===false){
+								if(window.confirm('是否确认,您正在尝试批量处理全部数据')){
+									run('','where');
+								}
+							}else{
+								run(searchArr,'where');
+							}
+						}else{
+							var allKeys = [];
+							$(this).parents('#fastTableInfo').find('>table>tbody>tr>.select>:checked').each(function(){
+								allKeys.push($(this).attr('data-id'));
+							});
+							var tempSearchArr = {
+							};
+							tempSearchArr[key] = allKeys;
+							run(tempSearchArr,'keys');
+						}
+					}
+				})
+			</script>
 		</div>
 	</div>
 	<div style="width:100%;height:30px;">
@@ -58,7 +166,7 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 	<table class="table table-striped table-hover table-responsive table-bordered">
 		<thead>
 		<tr>
-			<th><input type="checkbox"/></th>
+			<th style="width: 31px"><input type="checkbox"/></th>
 			{foreach $column as $k=>$v}
 				{if $v.listShowType!='hidden'}
 					<th column="{$k}">
@@ -66,6 +174,7 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 						{if $v.listsearch}
 							{if count($v.listsearch)>1}
 								<select>
+									<option value="">全部</option>
 									{foreach $v.listsearch as $kk=>$vv}
 										{if isset($vv.title)}
 											<option value="{$vv.match|escape:"html"}">{$vv.title}</option>
@@ -80,14 +189,17 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 								{/if}
 							{/if}
 							{foreach $v.listsearch as $num=>$search}
+								{if $v.dataType=='date'}
+									{$class='date'}
+								{/if}
 								{if substr_count($search.match,'?')==0}
 								{elseif $num==0}
 									{section name=loop loop=substr_count($search.match,'?')}
-										<input match="{$search.match|escape:"html"}"/>
+										<input type="text" {if $class!=''} class="{$class}"{/if} match="{$search.match|escape:"html"}"/>
 									{/section}
 								{else}
 									{section name=loop loop=substr_count($search.match,'?')}
-										<input tmp="{substr_count($search.match,'?')}" match="{$search.match|escape:"html"}" style="display: none;"/>
+										<input type="text" {if $class!=''} class="{$class}"{/if} tmp="{substr_count($search.match,'?')}" match="{$search.match|escape:"html"}" style="display: none;"/>
 									{/section}
 								{/if}
 							{/foreach}
@@ -101,15 +213,20 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 		<tbody></tbody>
 	</table>
 	<script>
+		$('.date').datepicker({
+			dateFormat: 'yy-mm-dd'
+		});
+
 		var column = {json_encode($column)};
 		var perPage ={$perPage};
 		var page = 0;
 		var key = "{$key}";
+		var deleteOpenAllPageData = {if $deleteOpenAllPageData}true{else}false{/if};
 		var searchArr = {
 		};
 		var htmlObject = {
 			{foreach $allColumnDataType as $typeName}
-				'{$typeName}':{include file="./mysqlAdminPlugIn/{$typeName}.tpl"},
+			'{$typeName}':{include file="./mysqlAdminPlugIn/{$typeName}.tpl"},
 			{/foreach}
 		};
 		var oHead = document.getElementsByTagName('HEAD').item(0);
@@ -246,7 +363,7 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 							'<td></td>' +
 							'<td></td>' +
 							'<td style="font-family:iconfont"><span class="deleteArrButton" style="float:right;color:#970000;">&#xe601;</span></td>' +
-						'</tr>'));
+							'</tr>'));
 				}else{
 					var div = $("<table class='table table-striped table-hover table-responsive table-bordered'></table>");
 				}
@@ -437,6 +554,23 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 						}
 					});
 				}
+			},
+			deleteByWhere:function(searchArr){
+				$.post('',{
+					function:'getCountByWhere',
+					where:searchArr,
+				},function(dataCount){
+					if(window.confirm('是否确认删除'+dataCount+'条数据么?')){
+						$.post('',{
+							function:'deleteAllPageData',
+							where:searchArr,
+						},function(result){
+							alert('删除了'+result+'条数据');
+						});
+					}
+				});
+			},
+			updateSomeDataReplace:function($where,$search,$replace){
 			}
 		};
 		mysqlAJAXClass.getList();
@@ -463,7 +597,11 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 				}
 			}
 			if(isNeedToInput ==false){
-				searchArr[$(this).parents('th').attr('column')] = $(this).val();
+				if($(this).val()!==''){
+					searchArr[$(this).parents('th').attr('column')] = $(this).val();
+				}else{
+					delete searchArr[$(this).parents('th').attr('column')];
+				}
 				mysqlAJAXClass.getList();
 			}
 		});
@@ -483,8 +621,6 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 				}
 			});
 			//要么都写了,要么都没写
-			console.log(isAllWrite);
-			console.log(sameMatchCount);
 			if(isAllWrite==0){
 				delete searchArr[$(this).parents('th').attr('column')];
 				page=0;
@@ -497,12 +633,48 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 				delete searchArr[$(this).parents('th').attr('column')];
 			}
 		});
-		$('#fastTableInfo .deleteAll :button').click(function(){
-			var allKeys = [];
-			$(this).parents('#fastTableInfo').find('>table>tbody>tr>.select>:checked').each(function(){
-				allKeys.push($(this).attr('data-id'));
-			});
-			mysqlAJAXClass.deleteSomeDataSent(allKeys, $(this).parents('.deleteAll') );
+		//整体删除
+		$('#fastTableInfo .deleteAll [data-event=delete]').click(function(){
+			var select = $(this).parents('.deleteAll').find('.panel-body .deleteCount select').val();
+			if(select=='allPage'){
+				var isHasColumnInput = false;
+				for(var i in searchArr){
+					isHasColumnInput = true;
+				}
+				if(isHasColumnInput){
+					mysqlAJAXClass.deleteByWhere(searchArr);
+				}else{
+					alert('操作被禁止,您的操作尝试删除全部数据');
+				}
+			}else{
+				var allKeys = [];
+				$(this).parents('#fastTableInfo').find('>table>tbody>tr>.select>:checked').each(function(){
+					allKeys.push($(this).attr('data-id'));
+				});
+				mysqlAJAXClass.deleteSomeDataSent(allKeys, $(this).parents('.deleteAll') );
+			}
+		});
+		//整体修改
+		$('#fastTableInfo .deleteAll [data-event=update]').click(function(){
+			//alert('开发中');
+//			var select = $(this).parents('.deleteAll').find('.panel-body .deleteCount select').val();
+//			if(select=='allPage'){
+//				var isHasColumnInput = false;
+//				for(var i in searchArr){
+//					isHasColumnInput = true;
+//				}
+//				if(isHasColumnInput){
+//					mysqlAJAXClass.deleteByWhere(searchArr);
+//				}else{
+//					alert('操作被禁止,您的操作尝试删除全部数据');
+//				}
+//			}else{
+//				var allKeys = [];
+//				$(this).parents('#fastTableInfo').find('>table>tbody>tr>.select>:checked').each(function(){
+//					allKeys.push($(this).attr('data-id'));
+//				});
+//				mysqlAJAXClass.deleteSomeDataSent(allKeys, $(this).parents('.deleteAll') );
+//			}
 		});
 		$('#fastTableInfo table').on('click','>tbody>tr>.select :checkbox',function(){
 			var allBrother = $(this).parents('table').find('>tbody>tr>.select>:checked');
@@ -510,6 +682,11 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 				$(this).parents('table').parent().find('>.deleteAll').show();
 			}else{
 				$(this).parents('table').parent().find('>.deleteAll').hide();
+			}
+			if(allBrother.length==perPage && deleteOpenAllPageData){
+				$(this).parents('table').parent().find('>.deleteAll .deleteCount').html('选择<select><option value="thisPage">本页全部</option><option value="allPage">全部</option></select>记录');
+			}else{
+				$(this).parents('table').parent().find('>.deleteAll .deleteCount').html('选择<span>'+allBrother.length+'</span>条记录');
 			}
 		});
 		$('#fastTableInfo table>thead>tr>th:eq(0)>:checkbox').click(function(){
@@ -519,6 +696,12 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
 				$(this).parents('table').parent().find('>.deleteAll').hide();
 			}
 			$('#fastTableInfo table>tbody>tr>.select>:checkbox').attr('checked',this.checked);
+			var allBrother = $(this).parents('table').find('>tbody>tr>.select>:checked');
+			if(allBrother.length==perPage && deleteOpenAllPageData){
+				$(this).parents('table').parent().find('>.deleteAll .deleteCount').html('选择<select><option value="thisPage">本页全部</option><option value="allPage">全部</option></select>记录');
+			}else{
+				$(this).parents('table').parent().find('>.deleteAll .deleteCount').html('选择<span>'+allBrother.length+'</span>条记录');
+			}
 		});
 	</script>
 </div>
