@@ -46,7 +46,7 @@ class kod_web_page extends stdClass{
 //		}
 		return $_output;
 	}
-	public function fetch($smartyTpl){
+	public function fetch($smartyTpl,$returnHtml=false){
 		$this->beforeFetch();
 		$smartyObject = new kod_smarty_smarty();
 //		if(count($this->smartyPlutPath)>=1){
@@ -67,6 +67,10 @@ class kod_web_page extends stdClass{
 		foreach($this as $k=>$v){
 			$smartyObject->assign($k,$v);
 		}
-		$smartyObject->display($smartyTpl);
+		if($returnHtml == true){
+			return $smartyObject->fetch($smartyTpl);
+		}else{
+			$smartyObject->display($smartyTpl);
+		}
 	}
 }
