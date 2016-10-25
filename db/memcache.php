@@ -11,7 +11,7 @@ class kod_db_memcache{
 	private $memObj;
 	public function __construct(){
 		$this->memObj = new Memcache();
-		self::initServerConnect($this->memObj);
+		static::initServerConnect($this->memObj);
 	}
 	public static function initServerConnect(&$MemcacheObj){
 		$MemcacheObj->connect('localhost', 11211);
@@ -21,7 +21,7 @@ class kod_db_memcache{
 	}
 	public static function __callStatic($function_name,$args){
 		$memcache_obj = new Memcache;
-		self::initServerConnect($memcache_obj);
+		static::initServerConnect($memcache_obj);
 		return call_user_func_array(array($memcache_obj,$function_name),$args);
 	}
 
