@@ -132,6 +132,22 @@ final class kod_web_rewrite{
 		return "";
 		return $filePath;
 	}
+
+	public static function getParams(){
+		$args = func_get_args ();
+		$tryUrl = $args[0];
+		if(preg_match($tryUrl,$_SERVER['REQUEST_URI'],$match)){
+			if(count($match)==count($args)){
+				foreach($match as $k=>$v){
+					$temp = &$args[$k];
+					//$temp.='asdfas';
+					$temp = $v;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
 }
 /*一组测试用例*/
 /*
