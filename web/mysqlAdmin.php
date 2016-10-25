@@ -29,10 +29,9 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 			preg_match("/CREATE TABLE `\S+` \(\n((.+,?\n)+)\)/",$tableInfo,$match);
 			$tableInfo = $match[1];
 			$tableInfo = explode(",\n",$tableInfo);
-			print_r($tableInfo);
 			$option = array();
 			foreach($tableInfo as $k=>$v){
-				if(preg_match("/`(\S+)` (int|smallint|varchar|tinyint|char)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
+				if(preg_match("/`(\S+)` (int|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
 					$option[$match[1]] = array(
 						"dataType"=>$match[2],
 						"maxLength"=>$match[3],
@@ -83,7 +82,7 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 				echo $tab."'".$k."'=>array("."<br/>";
 				echo $tab.$tab."'title'=>'".$v['title']."',<br/>";
 				echo $tab.$tab."'dataType'=>'".$v['dataType']."',<br/>";
-				if(!in_array($v["dataType"],array('int','tinyint','text','date'))){
+				if(!in_array($v["dataType"],array('int','tinyint','text','date','bigint'))){
 					echo $tab.$tab."'maxLength'=>".$v['maxLength'].",<br/>";
 				}
 				echo $tab.$tab."'notNull'=>".($v['notNull']?'true':'false').",<br/>";
@@ -95,7 +94,6 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 			echo ")";
 			exit;
 		}else{
-			$smarty = new Smarty();
 			$allColumnDataType = array();
 			foreach($option as $k=>$v){
 				//对配置的语法糖进行处理
@@ -124,18 +122,13 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 					$allColumnDataType[$v['dataType']] = true;
 				}
 			}
-			$allColumnDataType = array_keys($allColumnDataType);
-			$smarty->assign('deleteOpenAllPageData',$this->deleteOpenAllPageData);
-			$smarty->assign('allColumnDataType',$allColumnDataType);
-			$smarty->assign('column',$option);
-			$getMysqlDbHandle = $this->getMysqlDbHandle();
-			$smarty->assign('column',$option);
-			$smarty->assign('key',$getMysqlDbHandle->getKeyColumnName());
-
-			$smarty->assign('perPage',$this->pagePer);
-			$this->initSmarty($smarty);
-			$adminhtml = $smarty->fetch(KOD_DIR_NAME.'/web/mysqlAdmin.tpl');
-			return $adminhtml;
+			$smarty = new kod_web_page();
+			$smarty->deleteOpenAllPageData = $this->deleteOpenAllPageData;
+			$smarty->allColumnDataType = array_keys($allColumnDataType);
+			$smarty->column = $option;
+			$smarty->key = $this->getMysqlDbHandle()->getKeyColumnName();
+			$smarty->perPage = $this->pagePer;
+			return $smarty->fetch(KOD_DIR_NAME.'/web/mysqlAdmin.tpl',true);
 		}
 	}
 	public function getList($page=0,$searchArr=array()){
@@ -156,7 +149,9 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 		//获取数据
 		$select = array();
 		foreach($this->dbColumn as $key=>$column){
-			if($column['listShowType']!='hidden' || $key==$dbHandle->getKeyColumnName()){
+			if($key==$dbHandle->getKeyColumnName()){
+				$select[] = $key;
+			} elseif($column['listShowType']!='hidden' && $column['noDBColumn']!=true){
 				$select[] = $key;
 			}
 		}
@@ -180,7 +175,7 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
             foreach($this->dbColumn as $key=>$config){
                 if($config['dataList']['type']=='function'){
                     $funcName = $config['dataList']['function'];
-                    $dataList[$k][$key] = $this->$funcName($v[$key]);
+                    $dataList[$k][$key] = $this->$funcName($v);
                 }
             }
         }
