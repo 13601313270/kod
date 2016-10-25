@@ -121,7 +121,7 @@ final class kod_smarty_smarty extends Smarty{
 				foreach($cssHtmlArr as $cssHtml){
 					$cssHtml = str_replace("\n",'',$cssHtml);
 					$cssHtml = str_replace("\t",'',$cssHtml);
-					preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+})/is",$cssHtml,$match2);
+					preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is",$cssHtml,$match2);
 					foreach($match2[1] as $v){
 						$cssHtml.='@-moz-keyframes '.$v;
 						$cssHtml.='@-webkit-keyframes '.$v;
@@ -135,7 +135,9 @@ final class kod_smarty_smarty extends Smarty{
 					}
 					$content .=$cssHtml;
 				}
-				$fileName = str_replace(array(".tpl","/","."),array("","+","_"),$tplFile).".css";
+				//array(KOD_DIR_NAME,'~KOD+'),
+				$fileName = str_replace(KOD_DIR_NAME,'~kod',$tplFile);
+				$fileName = str_replace(array(".tpl","/","."),array("","+","_"),$fileName).".css";
 				$file = fopen(KOD_SMARTY_CSS_DIR.$fileName,'w'); // a模式就是一种追加模式，如果是w模式则会删除之前的内容再添加
 				if($file===false){
 					throw new Exception("写入文件失败，请保证路径【".KOD_SMARTY_CSS_DIR."】存在，并有写入权限");
@@ -144,9 +146,13 @@ final class kod_smarty_smarty extends Smarty{
 				fclose($file);
 				unset($file);
 				//获取可以访问生成css的url地址
-				$cssUrl = "/".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName;
-				if($cssUrl==""){
-					throw new Exception("生成的css文件【".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName."】，并不能生成对应的url网址，请配置对应的rewrite规则");
+				if(defined('KOD_SMARTY_CSS_HOST')){
+					$cssUrl = KOD_SMARTY_CSS_HOST.$fileName;
+				}else{
+					$cssUrl = "/".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName;
+					if($cssUrl==""){
+						throw new Exception("生成的css文件【".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName."】，并不能生成对应的url网址，请配置对应的rewrite规则");
+					}
 				}
 				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="'.$cssUrl.'?'.time().'"/>';
 				if(strpos($allHtml,'</head>')>-1){
