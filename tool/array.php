@@ -7,13 +7,17 @@
  */
 class kod_tool_array{
 
-	public static function groupByColumn($arr,$column){
+	public static function groupByColumn($arr,$column,$onlyOne=false){
 		$returnArr = array();
 		foreach($arr as $k=>$v){
-			if(isset($returnArr[$v[$column]])){
-				$returnArr[$v[$column]][] = $v;
+			if($onlyOne){
+				$returnArr[$v[$column]] = $v;
 			}else{
-				$returnArr[$v[$column]] = array($v);
+				if(isset($returnArr[$v[$column]])){
+					$returnArr[$v[$column]][] = $v;
+				}else{
+					$returnArr[$v[$column]] = array($v);
+				}
 			}
 		}
 		return $returnArr;
@@ -25,5 +29,18 @@ class kod_tool_array{
 			$returnArr[] = $v[$column];
 		}
 		return $returnArr;
+	}
+
+	//把数组按照某个字段排序
+	//SORT_ASC
+	//SORT_ASC
+	public static function orderByColumn($arr,$column,$sorting=SORT_ASC){
+		$arr = array_values($arr);
+		$newArr=array();
+		for($j=0;$j<count($arr);$j++){
+			$newArr[]=$arr[$j][$column];
+		}
+		array_multisort($newArr,$sorting,$arr);
+		return $arr;
 	}
 }
