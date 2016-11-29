@@ -494,7 +494,9 @@ css依赖，按照bootstrap规范定义，所以可以随意加载一套bootstra
                                     for (var j in column[i].dataList.data) {
                                         if (data && data[i] && data[i] == j) {
                                             select.append($('<option value="' + j + '" selected>' + column[i].dataList.data[j] + '</option>'));
-                                        } else {
+                                        } else if(column[i].dataList.select==j){
+                                            select.append($('<option value="' + j + '" selected>' + column[i].dataList.data[j] + '</option>'));
+                                        }else {
                                             select.append($('<option value="' + j + '">' + column[i].dataList.data[j] + '</option>'));
                                         }
                                     }

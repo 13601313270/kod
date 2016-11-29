@@ -6,6 +6,7 @@
  * Time: 下午2:29
  * @method static string set($key,$val)
  * @method static string get($key)
+ * @method static string delete($key)
  */
 class kod_db_memcache{
 	private $memObj;
@@ -27,16 +28,16 @@ class kod_db_memcache{
 
 	//自增服务
 	public static function adding($key,$numAdd,$function,$step=0){
-		$value = kod_db_memcache::get($key);
+		$value = static::get($key);
 		if($value==false){
-			kod_db_memcache::set($key,$numAdd);
+			static::set($key,$numAdd);
 		}else{
-			kod_db_memcache::increment($key,$numAdd);
+			static::increment($key,$numAdd);
 		}
-		$value = kod_db_memcache::get($key);
+		$value = static::get($key);
 		if($step && $value%$step==0){
 			$function($value);
-			kod_db_memcache::set($key,0);
+			static::set($key,0);
 		}
 		return $value;
 	}
@@ -52,7 +53,7 @@ class kod_db_memcache{
 		$lockValue = 'lock';
 		$lockValue2 = 'lock2';
 		for($i=0;$i<10;$i++){
-			$value = kod_db_memcache::get($key);
+			$value = static::get($key);
 			if(in_array($value,array($lockValue,$lockValue2))){
 				sleep(1);
 			}else{
@@ -61,23 +62,23 @@ class kod_db_memcache{
 		}
 		if($value==false || ($funcIsExpire!==null && $value!==false && $funcIsExpire($value)==false)){
 			//进程
-			kod_db_memcache::set($key,$lockValue,0,10);
+			static::set($key,$lockValue,0,10);
 			$weatTime = 10000;//轮训时间1s
 			usleep(rand(1,$weatTime));
-			if(kod_db_memcache::get($key)==$lockValue){
-				kod_db_memcache::set($key,$lockValue2,0,10);
+			if(static::get($key)==$lockValue){
+				static::set($key,$lockValue2,0,10);
 				$data = $function();
 				if($data==null){
-					kod_db_memcache::delete($key);
+					static::delete($key);
 					return null;
 				}else{
-					kod_db_memcache::set($key,$data,$flag,$expire);
-					return kod_db_memcache::get($key);
+					static::set($key,$data,$flag,$expire);
+					return static::get($key);
 				}
 			}else{
 				for($i=0;$i<3;$i++){
 					sleep(1);
-					$value = kod_db_memcache::get($key);
+					$value = static::get($key);
 					if(!in_array($value,array(false,$lockValue,$lockValue2))){
 						return $value;
 					}

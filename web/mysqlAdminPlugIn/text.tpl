@@ -25,6 +25,7 @@
 					wordCount:false,
 					//关闭elementPath
 					elementPathEnabled:false,
+					allowDivTransToP:false,
 					//默认的编辑区域高度
 					initialFrameHeight:300,
 					theme:'default',
@@ -33,9 +34,8 @@
 					initialContent:data?data:'',
 					autoClearinitialContent:false,
 					//更多其他参数，请参考ueditor.config.js中的配置项
-					serverUrl: 'http://admin.appcpu.cn/admin/http/imgUp.php',
-
-					imageUrl: "http://admin.appcpu.cn/admin/http/imgUp.php?action=uploadimage",
+					serverUrl: 'http://42.96.173.125/androidCreate/imgUp.php',
+					imageUrl: 'http://42.96.173.125/androidCreate/imgUp.php',
 					imagePath: "/ueditor/php/",
 					imageFieldName: "upfile",
 					imageMaxSize: 2048,
