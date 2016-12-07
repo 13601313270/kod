@@ -1,0 +1,3 @@
+[submodule "memcacheAuto"]
+	path = memcacheAuto
+	url = https://github.com/13601313270/memcacheAuto.git
