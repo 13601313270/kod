@@ -169,7 +169,7 @@ abstract class kod_db_mysqlSingle{
 
 	//只返回count的语法糖
 	private $getCountSelectColumn = false;
-	function getCount(){
+	public function getCount(){
 		$this->getCountSelectColumn = true;
 		return $this;
 	}
