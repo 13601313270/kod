@@ -11,22 +11,15 @@ interface kod_tool_configInterface{
 abstract class kod_tool_config implements kod_tool_configInterface{
 	public static $pathArr = array();
 	public static $urlArr = array();
-	/**
-	 * create
-	 * 函数的含义说明
-	 *
-	 * @access public
-	 * @since 1.0
-	 */
+	private static $pregChar = array('(',')','$','*','+','?','.','[',']','\\','^','{','}','|');
 	//把字符串拆分成一段一段的数组,以便于逐段匹配
 	public static function getArrByStr($str){
-		return explode('/',$str);
+		return array($str);
 	}
 	public static function init($aOption){
 		$lineList = static::getPageContent($aOption);
 		foreach($lineList as $one){
 			$paths = static::getArrByStr($one[0]);
-//			self::setPathVal(static::$pathArr,$paths,trim($one[1]));
 			self::setPathVal(static::$pathArr,$paths,$one);
 			//定义path=>url的数组
 			$allColumn = array();
@@ -34,9 +27,7 @@ abstract class kod_tool_config implements kod_tool_configInterface{
 				$allColumn["$".(count($allColumn)+1)] = $matchs[0];
 				return "$".count($allColumn);
 			},$one[0]);
-
-			//. \ + * ? [ ^ ] $ ( ) { } = ! < > | : -
-			$one[1] = preg_replace_callback("(\.|\\|\+|\*|\?|\[|\^|\]|\/)",function($matchs){
+			$one[1] = preg_replace_callback('('.'\\'.implode('|\\',self::$pregChar).')',function($matchs){
 				return "\\".$matchs[0];
 			},$one[1]);
 			$one[1] = preg_replace_callback("/(\\$\d+)/",function($matchs) use (&$allColumn){
@@ -50,7 +41,7 @@ abstract class kod_tool_config implements kod_tool_configInterface{
 			$path = static::$pathArr;
 		}
 		if(is_string($url)){
-			$url = static::getArrByStr($url);//explode("/",$url);
+			$url = static::getArrByStr($url);
 			if(empty($url[0])){
 				array_shift($url);
 			}
@@ -64,28 +55,22 @@ abstract class kod_tool_config implements kod_tool_configInterface{
 		}
 		$name = $_pathArr[0];
 		array_shift($_pathArr);
-		if(count($_pathArr)!=0){
-			$pregKeyWord = array('(',')','$','*','+','?','.','[',']','\\','^','{','}','|');
-			$isNeedPreg = false;
-			foreach($pregKeyWord as $v){
-				$pos = strstr($name,$v);
-				if($pos && substr($name,$pos-2,1)!=="\\"){
-					$isNeedPreg = true;
-				}
+		$pregKeyWord = self::$pregChar;
+		$isNeedPreg = false;
+		foreach($pregKeyWord as $v){
+			$pos = strstr($name,$v);
+			if($pos && substr($name,$pos-2,1)!=="\\"){
+				$isNeedPreg = true;
+				break;
 			}
+		}
+		if(count($_pathArr)!=0){
 			if($isNeedPreg){
 				self::setPathVal($arr["preg"][$name],$_pathArr,$val);
 			}else{
 				self::setPathVal($arr["equal"][$name],$_pathArr,$val);
 			}
 		}else{
-			$pregKeyWord = array("(","$");
-			$isNeedPreg = false;
-			foreach($pregKeyWord as $v){
-				if(strstr($name,$v)>-1){
-					$isNeedPreg = true;
-				}
-			}
 			if($isNeedPreg){
 				$arr["preg"][$name]["equal"] = $val;
 			}else{
