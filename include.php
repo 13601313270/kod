@@ -31,9 +31,9 @@ if(!defined('KOD_MYSQL_USER') || !defined('KOD_MYSQL_PASSWORD') ){
 if(!defined('KOD_COMMENT_MYSQLDB_CHARSET')){
 	define('KOD_COMMENT_MYSQLDB_CHARSET','utf8');
 }
-//mysql模式，开发过程中建议使用TRADITIONAL，以便获取更准确的错误提示
+//mysql模式，开发过程中建议使用TRADITIONAL，以便获取更准确的错误提示,ANSI
 if(!defined('KOD_SQL_MODE')){
-	define('KOD_SQL_MODE','TRADITIONAL');
+	define('KOD_SQL_MODE','ANSI');
 }
 
 //smarty框架预编译存储路径
@@ -59,17 +59,28 @@ if(!defined('KOD_REWRITE_HTML_LINK')){
 
 //define("KOD_SMARTY_TEMPLETE_PATH","");//smarty根目录
 //define("KOD_WEB_","./");
+
+//是否开启metaPHP
+if(!defined('KOD_METAPHP_OPEN')){
+	define('KOD_METAPHP_OPEN',true);
+}
+if(KOD_METAPHP_OPEN){
+	include_once(KOD_DIR_NAME.'/metaPHP/include.php');
+	//必须定义一个自定义的存储函数
+	if(!function_exists('metaPHPSave_Function')){
+		function metaPHPSave_Function($file,$code){
+			var_dump('meta计划往'.$file.'存储代码,可以通过自定义metaPHPSave_Function函数来实现自定义的存储');
+			echo $code;
+		}
+	}
+}
+
 date_default_timezone_set('PRC');
 
-//因为使用了自动加载函数，所以kod内所有的文件中的类名称，必须和文件存储结构对应。
-//因为用户可能希望有自己的__autoload逻辑，为了避免产生混淆，kod所有的类名，都以kod开头，这样就可以通过这个的不同来走不同的逻辑。
-function kod__autoload($model){
+spl_autoload_register(function($model){
 	if(strpos($model,'kod_')===0){
 		if(!include_once(dirname(KOD_DIR_NAME).KOD_DS.str_replace('_', KOD_DS,$model).'.php')){
 			throw new Exception('类【'.$model.'】不存在，KOD自动加载机制尝试加载'.dirname(KOD_DIR_NAME).KOD_DS.str_replace('_',KOD_DS,$model).'.php发现文件不存在。');
 		}
-	}else{
-		kod_user_autoload($model);//用户自己的__autoload逻辑
 	}
-}
-spl_autoload_register('kod__autoload');
+});

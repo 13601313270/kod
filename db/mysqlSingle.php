@@ -423,6 +423,7 @@ abstract class kod_db_mysqlSingle{
 			}
 		}
 	}
+	//insert第二个函数传入default会造成错误,忘记了当初为什么不直接只能使用mysql_insert_id方式了
 	protected function insert($params,$mysql_insert_id = true){
 		$con = $this->dbHandle->getConnect();
 		foreach($params as $k=>$v) {
@@ -534,7 +535,7 @@ abstract class kod_db_mysqlSingle{
 				}
 			}
 
-			throw new Exception("向表【".$this->tableName."】插入数据未知错误",130,$e);
+			throw new Exception("向表【".$this->tableName."】插入数据未知错误".$e->getMessage(),130,$e);
 			//未完成
 			$keys = $this->dbHandle->runsql("show create table ".$this->tableName);
 			print_r($keys);exit;

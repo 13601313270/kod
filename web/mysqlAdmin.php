@@ -26,12 +26,13 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 			$dbHandle = $this->getMysqlDbHandle();
 			$tableInfo = $dbHandle->showCreateTable();
 			$tableInfo = $tableInfo["Create Table"];
-			preg_match("/CREATE TABLE `\S+` \(\n((.+,?\n)+)\)/",$tableInfo,$match);
+			preg_match("/CREATE TABLE [`|\"]\S+?[`|\"] \(\n((.+,?\n)+)\)/",$tableInfo,$match);
 			$tableInfo = $match[1];
 			$tableInfo = explode(",\n",$tableInfo);
 			$option = array();
+
 			foreach($tableInfo as $k=>$v){
-				if(preg_match("/`(\S+)` (int|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
+				if(preg_match("/[`|\"](\S+)[`|\"] (int|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
 					$option[$match[1]] = array(
 						"dataType"=>$match[2],
 						"maxLength"=>$match[3],
@@ -41,23 +42,24 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 					if(!empty($match[5]) && $match[5]==" AUTO_INCREMENT"){
 						$option[$match[1]]["AUTO_INCREMENT"] = true;
 					}
-				}elseif(preg_match("/`(\S+)` (text|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
+				}elseif(preg_match("/[`|\"](\S+)[`|\"] (text|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
 					$option[$match[1]] = array(
 						'dataType'=>$match[2],
 						'notNull'=>!empty($match[3]),
 						'title'=>empty($match[7])?$match[1]:$match[7],
 					);
-				}elseif(  preg_match("/`(\S+)` timestamp( NOT NULL| DEFAULT NULL)( DEFAULT CURRENT_TIMESTAMP)?( ON UPDATE CURRENT_TIMESTAMP)?( COMMENT '(\S+)')?/",$v,$match)  ){
+				}elseif(  preg_match("/[`|\"](\S+)[`|\"] timestamp( NOT NULL| DEFAULT NULL)( DEFAULT CURRENT_TIMESTAMP)?( ON UPDATE CURRENT_TIMESTAMP)?( COMMENT '(\S+)')?/",$v,$match)  ){
 					$option[$match[1]] = array(
 						"dataType"=>'date',
 						"notNull"=>!empty($match[2]),
 						"title"=>"",
 					);
+				}else{
+
 				}
 			}
-			echo 'getAdminHtml方法传入的$option参数变量不能为空，请尝试传入下面的变量'."<br/>";
-			echo "array(<br/>";
-			$tab = '&nbsp;&nbsp;&nbsp;&nbsp;';
+			$daoFileMetaCode = new classAction(get_class($this));
+			$dbColumn = &$daoFileMetaCode->phpInterpreter->search('.class #$dbColumn value child');
 			foreach($option as $k=>$v){
 				if(in_array(strtoupper($k),array("ADD","ALL","ALTER","ANALYZE","AND","AS","ASC","ASENSITIVE","BEFORE","BETWEEN","BIGINT","BINARY","BLOB",
 					"BOTH","BY","CALL","CASCADE","CASE","CHANGE","CHAR","CHARACTER","CHECK","COLLATE","COLUMN","CONDITION","CONNECTION","CONSTRAINT",
@@ -79,20 +81,47 @@ abstract class kod_web_mysqlAdmin extends kod_web_httpObject{
 					"VARYING","WHEN","WHERE","WHILE","WITH","WRITE","X509","XOR","YEAR_MONTH","ZEROFILL"))){
 					throw new Exception("表".$this->tableName."中使用了关键词【".$k."】作为字段，在kod系统中是禁止的");
 				}
-				echo $tab."'".$k."'=>array("."<br/>";
-				echo $tab.$tab."'title'=>'".$v['title']."',<br/>";
-				echo $tab.$tab."'dataType'=>'".$v['dataType']."',<br/>";
+				$insertColumnMeta = array(
+					'type'=>'arrayValue',
+					'key'=>array('type'=>'string','borderStr'=>"'",'data'=>$k),
+					'value'=>array(
+						'type'=>'array',
+						'child'=>array(
+							array(
+								'type'=>'arrayValue',
+								'key'=>array('type'=>'string','borderStr'=>"'",'data'=>'title'),
+								'value'=>array('type'=>'string','borderStr'=>"'",'data'=>$v['title']),
+							),
+							array(
+								'type'=>'arrayValue',
+								'key'=>array('type'=>'string','borderStr'=>"'",'data'=>'dataType'),
+								'value'=>array('type'=>'string','borderStr'=>"'",'data'=>$v['dataType']),
+							),
+							array(
+								'type'=>'arrayValue',
+								'key'=>array('type'=>'string','borderStr'=>"'",'data'=>'notNull'),
+								'value'=>array('type'=>'bool','data'=>$v['notNull']?'true':'false'),
+							),
+						)
+					),
+				);
 				if(!in_array($v["dataType"],array('int','tinyint','text','date','bigint'))){
-					echo $tab.$tab."'maxLength'=>".$v['maxLength'].",<br/>";
+					$insertColumnMeta['value']['child'][] = array(
+						'type'=>'arrayValue',
+						'key'=>array('type'=>'string','borderStr'=>"'",'data'=>'maxLength'),
+						'value'=>array('type'=>'string','borderStr'=>"'",'data'=>$v['maxLength']),
+					);
 				}
-				echo $tab.$tab."'notNull'=>".($v['notNull']?'true':'false').",<br/>";
 				if(isset($v['AUTO_INCREMENT'])){
-					echo $tab.$tab."'AUTO_INCREMENT'=>".($v['AUTO_INCREMENT']?'true':'false').",<br/>";
+					$insertColumnMeta['value']['child'][] = array(
+							'type'=>'arrayValue',
+							'key'=>array('type'=>'string','borderStr'=>"'",'data'=>'AUTO_INCREMENT'),
+							'value'=>array('type'=>'bool','data'=>($v['AUTO_INCREMENT']?'true':'false')),
+					);
 				}
-				echo $tab.'),'.'<br/>';
+				$dbColumn[] = $insertColumnMeta;
 			}
-			echo ")";
-			exit;
+			metaPHPSave_Function($daoFileMetaCode->getFileName(),$daoFileMetaCode->phpInterpreter->getCode());
 		}else{
 			$allColumnDataType = array();
 			foreach($option as $k=>$v){
