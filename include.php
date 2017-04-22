@@ -59,6 +59,18 @@ if(!defined('KOD_REWRITE_HTML_LINK')){
 
 //define("KOD_SMARTY_TEMPLETE_PATH","");//smarty根目录
 //define("KOD_WEB_","./");
+//是否开启memcache
+if(!defined('KOD_MEMCACHE_OPEN')){
+	define('KOD_MEMCACHE_OPEN',false);
+}
+if(KOD_MEMCACHE_OPEN){
+	if(!defined('KOD_MEMCACHE_HOST')){
+		define('KOD_MEMCACHE_HOST','localhost');
+	}
+	if(!defined('KOD_MEMCACHE_PORT')){
+		define('KOD_MEMCACHE_PORT',11211);
+	}
+}
 
 //是否开启metaPHP
 if(!defined('KOD_METAPHP_OPEN')){

@@ -4,26 +4,31 @@
  * User: mfw
  * Date: 16/2/1
  * Time: 下午2:29
- * @method static string set($key,$val)
+ * @method static bool set($key,$val,$flag,$expire)
  * @method static string get($key)
  * @method static string delete($key)
  */
 class kod_db_memcache{
 	private $memObj;
-	public function __construct(){
+	protected static $host = 'localhost';
+	protected static $port = 11211;
+	private function __construct(){
 		$this->memObj = new Memcache();
 		static::initServerConnect($this->memObj);
 	}
 	public static function initServerConnect(&$MemcacheObj){
-		$MemcacheObj->connect('localhost', 11211);
+		$MemcacheObj->connect(static::$host, static::$port);
 	}
 	public function __call($function_name,$args){
 
 	}
 	public static function __callStatic($function_name,$args){
-		$memcache_obj = new Memcache;
-		static::initServerConnect($memcache_obj);
-		return call_user_func_array(array($memcache_obj,$function_name),$args);
+		if(KOD_MEMCACHE_OPEN){
+			$memcache_obj = new Memcache;
+			return call_user_func_array(array($memcache_obj,$function_name),$args);
+		}else{
+			throw new Exception('请在配置文件中开启memcache功能,define(\'KOD_MEMCACHE_OPEN\',true);');
+		}
 	}
 
 	//自增服务
@@ -87,18 +92,6 @@ class kod_db_memcache{
 		}else{
 			return $value;
 		}
-	}
-	/**
-	 * create
-	 * 函数的含义说明
-	 *
-	 * @access public
-	 * @since 1.0
-	 * @return $this
-	 */
-	static function create(){
-		$temp = get_called_class();
-		return new $temp();
 	}
 }
 //memcache方法在网址  http://php.net/manual/zh/book.memcache.php  中查看
