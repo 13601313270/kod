@@ -49,7 +49,7 @@ class kod_db_memcache{
 	 * @param int $expire
 	 * @param function $funcIsExpire 验证数据是否已经过期,返回false,会走重新生成的逻辑
 	 * */
-	public static function returnCacheOrSave($key,$function,$flag=0,$expire=0,$funcIsExpire=null){
+	public static function returnCacheOrSave($key,$function,$flag=0,$expire=0,$funcIsExpire=''){
 		$lockValue = 'lock';
 		$lockValue2 = 'lock2';
 		for($i=0;$i<10;$i++){
@@ -60,7 +60,7 @@ class kod_db_memcache{
 				break;
 			}
 		}
-		if($value==false || ($funcIsExpire!==null && $value!==false && $funcIsExpire($value)==false)){
+		if($value==false || ($funcIsExpire!=='' && $value!==false && $funcIsExpire($value)==false)){
 			//进程
 			static::set($key,$lockValue,0,10);
 			$weatTime = 10000;//轮训时间1s
@@ -88,6 +88,14 @@ class kod_db_memcache{
 			return $value;
 		}
 	}
+	/**
+	 * create
+	 * 函数的含义说明
+	 *
+	 * @access public
+	 * @since 1.0
+	 * @return $this
+	 */
 	static function create(){
 		$temp = get_called_class();
 		return new $temp();
