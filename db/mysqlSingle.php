@@ -265,7 +265,7 @@ abstract class kod_db_mysqlSingle{
 		);
 	}
 
-	protected function getList($arr){
+	public function getList($arr){
 		$needToSelectVerticalTable = array();
 		if(empty($arr)){
 			$sql ="";
@@ -424,7 +424,7 @@ abstract class kod_db_mysqlSingle{
 		}
 	}
 	//insert第二个函数传入default会造成错误,忘记了当初为什么不直接只能使用mysql_insert_id方式了
-	protected function insert($params,$mysql_insert_id = true){
+	public function insert($params,$mysql_insert_id = true){
 		$con = $this->dbHandle->getConnect();
 		foreach($params as $k=>$v) {
 			$params[$k] = mysql_real_escape_string($v);
@@ -544,7 +544,7 @@ abstract class kod_db_mysqlSingle{
 			print_r($err);
 		}
 	}
-	protected function update($where,$params){
+	public function update($where,$params){
 		$con = $this->dbHandle->getConnect();
 		$isUp = true;
 		$sql = "update ".$this->tableName." set ";
@@ -630,14 +630,14 @@ abstract class kod_db_mysqlSingle{
 			throw new Exception("更新错误",0,$e);
 		}
 	}
-	protected function deleteById($id){
+	public function deleteById($id){
 		if($this->keyDataType=='int'){
 			return $this->dbHandle->runsql("delete from ".$this->tableName." where ".$this->key."=".intval($id));
 		}else{
 			return $this->dbHandle->runsql("delete from ".$this->tableName." where ".$this->key.'="'.$id.'"');
 		}
 	}
-	protected function deleteByIds($ids){
+	public function deleteByIds($ids){
 		if(empty($ids)){
 			return false;
 		}elseif($this->keyDataType=='int'){
