@@ -9,22 +9,20 @@
  * @method static string delete($key)
  */
 class kod_db_memcache{
-	private $memObj;
-	protected static $host = 'localhost';
-	protected static $port = 11211;
-	private function __construct(){
-		$this->memObj = new Memcache();
-		static::initServerConnect($this->memObj);
-	}
+	public $memObj;
+	protected static $host = KOD_MEMCACHE_HOST;
+	protected static $port = KOD_MEMCACHE_PORT;
+	private function __construct(){}
+	/**
+	 * @param Memcache $MemcacheObj
+	*/
 	public static function initServerConnect(&$MemcacheObj){
 		$MemcacheObj->connect(static::$host, static::$port);
-	}
-	public function __call($function_name,$args){
-
 	}
 	public static function __callStatic($function_name,$args){
 		if(KOD_MEMCACHE_OPEN){
 			$memcache_obj = new Memcache;
+			static::initServerConnect($memcache_obj);
 			return call_user_func_array(array($memcache_obj,$function_name),$args);
 		}else{
 			throw new Exception('请在配置文件中开启memcache功能,define(\'KOD_MEMCACHE_OPEN\',true);');
