@@ -50,7 +50,7 @@ class kod_db_memcache{
 	 * @param func $function
 	 * @param int $flag
 	 * @param int $expire
-	 * @param function $funcIsExpire 验证数据是否已经过期,返回false,会走重新生成的逻辑
+	 * @param function $funcIsExpire 验证数据是否已经还在保质期,返回false代表已经失效,会走重新生成的逻辑
 	 * */
 	public static function returnCacheOrSave($key,$function,$flag=0,$expire=0,$funcIsExpire=''){
 		$lockValue = 'lock';
