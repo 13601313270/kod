@@ -672,8 +672,39 @@ abstract class kod_db_mysqlSingle{
 	}
 
 	function showCreateTable(){
-		$returnData = $this->dbHandle->runsql("show create table ".$this->dbName.".".$this->tableName);
-		return $returnData[0];
+		$tableInfo = $this->dbHandle->runsql("show create table ".$this->dbName.".".$this->tableName);
+		if(preg_match('/CREATE TABLE ".+?"\s*\(([\S|\s]*)\)$/',$tableInfo[0]['Create Table'],$match)){
+			$tableInfo = explode(',',$match[1]);
+			$option = array();
+			foreach($tableInfo as $k=>$v){
+				if(preg_match("/[`|\"](\S+)[`|\"] (int|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
+					$option[$match[1]] = array(
+							"dataType"=>$match[2],
+							"maxLength"=>intval($match[3]),
+							"notNull"=>!empty($match[4]),
+							"title"=>empty($match[8])?$match[1]:$match[8],
+					);
+					if(!empty($match[5]) && $match[5]==" AUTO_INCREMENT"){
+						$option[$match[1]]["AUTO_INCREMENT"] = true;
+					}
+				}elseif(preg_match("/[`|\"](\S+)[`|\"] (text|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
+					$option[$match[1]] = array(
+							'dataType'=>$match[2],
+							'notNull'=>!empty($match[3]),
+							'title'=>empty($match[7])?$match[1]:$match[7],
+					);
+				}elseif(  preg_match("/[`|\"](\S+)[`|\"] timestamp( NOT NULL| DEFAULT NULL)( DEFAULT CURRENT_TIMESTAMP)?( ON UPDATE CURRENT_TIMESTAMP)?( COMMENT '(\S+)')?/",$v,$match)  ){
+					$option[$match[1]] = array(
+							"dataType"=>'date',
+							"notNull"=>!empty($match[2]),
+							"title"=>"",
+					);
+				}
+			}
+			return $option;
+		}else{
+			return array();
+		}
 	}
 }
 
