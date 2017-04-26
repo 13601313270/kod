@@ -678,26 +678,35 @@ abstract class kod_db_mysqlSingle{
 			$option = array();
 			foreach($tableInfo as $k=>$v){
 				if(preg_match("/[`|\"](\S+)[`|\"] (int|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
-					$option[$match[1]] = array(
-							"dataType"=>$match[2],
-							"maxLength"=>intval($match[3]),
-							"notNull"=>!empty($match[4]),
-							"title"=>empty($match[8])?$match[1]:$match[8],
+					$item = array(
+						'dataType'=>$match[2],
+						'maxLength'=>intval($match[3]),
+						'notNull'=>!empty($match[4]),
+						'title'=>empty($match[8])?$match[1]:$match[8],
 					);
+					if(!empty($match[6])){
+						$item['default'] = $match[6];
+					}
+					$option[$match[1]] = $item;
 					if(!empty($match[5]) && $match[5]==" AUTO_INCREMENT"){
 						$option[$match[1]]["AUTO_INCREMENT"] = true;
 					}
-				}elseif(preg_match("/[`|\"](\S+)[`|\"] (text|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/",$v,$match)){
-					$option[$match[1]] = array(
-							'dataType'=>$match[2],
-							'notNull'=>!empty($match[3]),
-							'title'=>empty($match[7])?$match[1]:$match[7],
+				}elseif(preg_match("/[`|\"](\S+)[`|\"] (text|datetime|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '([^']+)')?( COMMENT '(\S+)')?/",$v,$match)){
+					$item = array(
+						'dataType'=>$match[2],
+						'notNull'=>!empty($match[3]),
+						'title'=>empty($match[7])?$match[1]:$match[7],
 					);
-				}elseif(  preg_match("/[`|\"](\S+)[`|\"] timestamp( NOT NULL| DEFAULT NULL)( DEFAULT CURRENT_TIMESTAMP)?( ON UPDATE CURRENT_TIMESTAMP)?( COMMENT '(\S+)')?/",$v,$match)  ){
+					if(!empty($match[5])){
+						$item['default'] = $match[5];
+					}
+					$option[$match[1]] = $item;
+				}
+				elseif(  preg_match("/[`|\"](\S+)[`|\"] timestamp( NOT NULL| DEFAULT NULL)( DEFAULT CURRENT_TIMESTAMP)?( ON UPDATE CURRENT_TIMESTAMP)?( COMMENT '(\S+)')?/",$v,$match)  ){
 					$option[$match[1]] = array(
-							"dataType"=>'date',
-							"notNull"=>!empty($match[2]),
-							"title"=>"",
+						"dataType"=>'timestamp',
+						"notNull"=>!empty($match[2]),
+						"title"=>"",
 					);
 				}
 			}
