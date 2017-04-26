@@ -684,7 +684,7 @@ abstract class kod_db_mysqlSingle{
 						'notNull'=>!empty($match[4]),
 						'title'=>empty($match[8])?$match[1]:$match[8],
 					);
-					if(!empty($match[6])){
+					if($match[6]!==null){
 						$item['default'] = $match[6];
 					}
 					$option[$match[1]] = $item;
@@ -697,7 +697,7 @@ abstract class kod_db_mysqlSingle{
 						'notNull'=>!empty($match[3]),
 						'title'=>empty($match[7])?$match[1]:$match[7],
 					);
-					if(!empty($match[5])){
+					if($match[5]!==null){
 						$item['default'] = $match[5];
 					}
 					$option[$match[1]] = $item;
