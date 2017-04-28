@@ -1,5 +1,5 @@
 	{
-		'js':['http://cdn.staticfile.org/Plupload/2.1.1/plupload.full.min.js','http://cdn.staticfile.org/qiniu-js-sdk/1.0.14-beta/qiniu.min.js','http://42.96.173.125/js/qiniu.js'],
+		'js':['http://cdn.staticfile.org/Plupload/2.1.1/plupload.full.min.js','http://cdn.staticfile.org/qiniu-js-sdk/1.0.14-beta/qiniu.min.js','http://118.190.95.234/js/qiniu.js'],
 		'list':function(data){
 			return $('<td><img src="'+data+'" width=100></td>');
 		},

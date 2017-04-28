@@ -34,8 +34,8 @@
 					initialContent:data?data:'',
 					autoClearinitialContent:false,
 					//更多其他参数，请参考ueditor.config.js中的配置项
-					serverUrl: 'http://42.96.173.125/androidCreate/imgUp.php',
-					imageUrl: 'http://42.96.173.125/androidCreate/imgUp.php',
+					serverUrl: 'http://118.190.95.234//androidCreate/imgUp.php',
+					imageUrl: 'http://118.190.95.234//androidCreate/imgUp.php',
 					imagePath: "/ueditor/php/",
 					imageFieldName: "upfile",
 					imageMaxSize: 2048,
