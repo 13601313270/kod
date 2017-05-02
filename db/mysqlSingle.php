@@ -709,6 +709,12 @@ abstract class kod_db_mysqlSingle{
 						"title"=>"",
 					);
 				}
+				elseif( preg_match("/UNIQUE KEY [`|\"](\S+)[`|\"] \([`|\"]([^,]+)[`|\"]\)/",$v,$match) ){
+					$option[$match[2]]['unique'] = true;
+				}
+				elseif( preg_match("/PRIMARY KEY \([`|\"]([^,]+)[`|\"]\)/",$v,$match) ){
+					$option[$match[1]]['primarykey'] = true;
+				}
 			}
 			return $option;
 		}else{
