@@ -46,6 +46,13 @@ class kod_web_page extends stdClass{
 //		}
 		return $_output;
 	}
+	public function fetchJSON(){
+		$allData = array();
+		foreach($this as $k=>$v){
+			$allData[$k] = $v;
+		}
+		echo json_encode($allData);
+	}
 	public function fetch($smartyTpl,$returnHtml=false){
 		$this->beforeFetch();
 		$smartyObject = new kod_smarty_smarty();
