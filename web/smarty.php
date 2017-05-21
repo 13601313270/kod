@@ -7,16 +7,74 @@
  */
 include_once KOD_DIR_NAME."/smarty/Smarty.class.php";
 final class kod_smarty_smarty extends Smarty{
-	public function fetch($template = null, $cache_id = null, $compile_id = null, $parent = null, $display = false, $merge_tpl_vars = true, $no_output_filter = false){
-		if($this->compile_dir==null){
-			throw new Exception("您并未给Smarty的实例配置预编译文件存储路径属性compile_dir，请进行配置。您也可以在加载文件中配置静态变量【KOD_SMARTY_COMPILR_DIR】作为smarty的默认值",1);
-		}
-		$this->registerFilter('output',array('kod_smarty_smarty','outputFilter'));
-		$this->registerFilter('post',array('kod_smarty_smarty','afterFilter'));
-		return parent::fetch($template, $cache_id, $compile_id, $parent, $display, $merge_tpl_vars, $no_output_filter);
-	}
+//	public function fetch($template = null, $cache_id = null, $compile_id = null, $parent = null, $display = false, $merge_tpl_vars = true, $no_output_filter = false){
+//		if($this->compile_dir==null){
+//			throw new Exception("您并未给Smarty的实例配置预编译文件存储路径属性compile_dir，请进行配置。您也可以在加载文件中配置静态变量【KOD_SMARTY_COMPILR_DIR】作为smarty的默认值",1);
+//		}
+////		$this->registerFilter('pre',array('kod_smarty_smarty','machiningTemplate'));
+////		$this->registerFilter('output',array('kod_smarty_smarty','outputFilter'));
+////		$this->registerFilter('post',array('kod_smarty_smarty','afterFilter'));
+//		return parent::fetch($template, $cache_id, $compile_id, $parent, $display, $merge_tpl_vars, $no_output_filter);
+//	}
 	public static $test = true;//是否是测试开发
 
+	public static function machiningTemplate($allHtml, $template){
+		//分解css
+		if(defined('KOD_SMARTY_CSS_DIR')){
+			preg_match_all("/<style>(.*?)<\/style>/is",$allHtml,$match);
+			$cssHtmlArr = $match[1];
+			if(!empty($cssHtmlArr)){//如果匹配到了style内容
+				//写入文件
+				$content = "";
+				foreach($cssHtmlArr as $cssHtml){
+					$cssHtml = str_replace("\n",'',$cssHtml);
+					$cssHtml = str_replace("\t",'',$cssHtml);
+					preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is",$cssHtml,$match2);
+					foreach($match2[1] as $v){
+						$cssHtml.='@-moz-keyframes '.$v;
+						$cssHtml.='@-webkit-keyframes '.$v;
+						$cssHtml.='@-o-keyframes '.$v;
+					}
+					preg_match_all("/animation\s*:\s*[^;]+[;|}]/is",$cssHtml,$match2);
+					foreach($match2[0] as $v){
+						$cssHtml.='-moz-'.$v;
+						$cssHtml.='-webkit-'.$v;
+						$cssHtml.='-o-'.$v;
+					}
+					$content .=$cssHtml;
+				}
+				//array(KOD_DIR_NAME,'~KOD+'),
+				$fileName = str_replace(KOD_DIR_NAME,'~kod',$template->template_resource);
+				$fileName = str_replace(array(".tpl","/","."),array("","+","_"),$fileName).".css";
+				$file = fopen(KOD_SMARTY_CSS_DIR.$fileName,'w'); // a模式就是一种追加模式，如果是w模式则会删除之前的内容再添加
+				if($file===false){
+					throw new Exception("写入文件失败，请保证路径【".KOD_SMARTY_CSS_DIR."】存在，并有写入权限");
+				}
+				fwrite($file,$content);
+				fclose($file);
+				unset($file);
+				//获取可以访问生成css的url地址
+				if(defined('KOD_SMARTY_CSS_HOST')){
+					$cssUrl = KOD_SMARTY_CSS_HOST.$fileName;
+				}else{
+					$cssUrl = "/".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName;
+					if($cssUrl==""){
+						throw new Exception("生成的css文件【".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName."】，并不能生成对应的url网址，请配置对应的rewrite规则");
+					}
+				}
+				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="'.$cssUrl.'?'.time().'"/>';
+				if(strpos($allHtml,'</head>')>-1){
+					$allHtml = preg_replace("/<style>(.*?)<\/style>/is","",$allHtml);
+					$allHtml = str_replace('</head>',"\t".$cssLinkHtml."\n</head>",$allHtml);
+				}else{
+					$allHtml = preg_replace("/<style>(.*?)<\/style>/is",$cssLinkHtml,$allHtml);
+				}
+
+			}else{
+			}
+		}
+		return $allHtml;
+	}
 	//测试环境下追加的一些数据展示信息
 	public static function compilerTestAfter($data){
 		if(self::$test==true){
@@ -110,62 +168,7 @@ final class kod_smarty_smarty extends Smarty{
 	}
 	//对smarty里面include方法加载的tpl文件生成的php编译文件进行加工，再存入硬盘
 	public static function compilerIncludeTplHtml($allHtml,$tplFile){
-		//分解css
-		if(defined('KOD_SMARTY_CSS_DIR')){
-			preg_match_all("/<style>(.*?)<\/style>/is",$allHtml,$match);
-			$cssHtmlArr = $match[1];
-
-			if(!empty($cssHtmlArr)){//如果匹配到了style内容
-				//写入文件
-				$content = "";
-				foreach($cssHtmlArr as $cssHtml){
-					$cssHtml = str_replace("\n",'',$cssHtml);
-					$cssHtml = str_replace("\t",'',$cssHtml);
-					preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is",$cssHtml,$match2);
-					foreach($match2[1] as $v){
-						$cssHtml.='@-moz-keyframes '.$v;
-						$cssHtml.='@-webkit-keyframes '.$v;
-						$cssHtml.='@-o-keyframes '.$v;
-					}
-					preg_match_all("/animation\s*:\s*[^;]+[;|}]/is",$cssHtml,$match2);
-					foreach($match2[0] as $v){
-						$cssHtml.='-moz-'.$v;
-						$cssHtml.='-webkit-'.$v;
-						$cssHtml.='-o-'.$v;
-					}
-					$content .=$cssHtml;
-				}
-				//array(KOD_DIR_NAME,'~KOD+'),
-				$fileName = str_replace(KOD_DIR_NAME,'~kod',$tplFile);
-				$fileName = str_replace(array(".tpl","/","."),array("","+","_"),$fileName).".css";
-				$file = fopen(KOD_SMARTY_CSS_DIR.$fileName,'w'); // a模式就是一种追加模式，如果是w模式则会删除之前的内容再添加
-				if($file===false){
-					throw new Exception("写入文件失败，请保证路径【".KOD_SMARTY_CSS_DIR."】存在，并有写入权限");
-				}
-				fwrite($file,$content);
-				fclose($file);
-				unset($file);
-				//获取可以访问生成css的url地址
-				if(defined('KOD_SMARTY_CSS_HOST')){
-					$cssUrl = KOD_SMARTY_CSS_HOST.$fileName;
-				}else{
-					$cssUrl = "/".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName;
-					if($cssUrl==""){
-						throw new Exception("生成的css文件【".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName."】，并不能生成对应的url网址，请配置对应的rewrite规则");
-					}
-				}
-				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="'.$cssUrl.'?'.time().'"/>';
-				if(strpos($allHtml,'</head>')>-1){
-					$allHtml = preg_replace("/<style>(.*?)<\/style>/is","",$allHtml);
-					$allHtml = str_replace('</head>',"\t".$cssLinkHtml."\n</head>",$allHtml);
-				}else{
-					$allHtml = preg_replace("/<style>(.*?)<\/style>/is",$cssLinkHtml,$allHtml);
-				}
-			}else{
-			}
-		}
-		//$allHtml = '<!--没有css2-->'.$allHtml;
-		return $allHtml;
+		return '<!--include'.rand(0,19).'-->'.$allHtml;
 	}
 
 	//生成的php文件进行加工，再存入文件
@@ -203,6 +206,61 @@ final class kod_smarty_smarty extends Smarty{
 		return $content;
 	}
 	public static function outputFilter($_output,$template){
+		//分解css
+		if(defined('KOD_SMARTY_CSS_DIR')){
+			preg_match_all("/<style>(.*?)<\/style>/is",$_output,$match);
+			$cssHtmlArr = $match[1];
+			if(!empty($cssHtmlArr)){//如果匹配到了style内容
+				//写入文件
+				$content = "";
+				foreach($cssHtmlArr as $cssHtml){
+					$cssHtml = str_replace("\n",'',$cssHtml);
+					$cssHtml = str_replace("\t",'',$cssHtml);
+					preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is",$cssHtml,$match2);
+					foreach($match2[1] as $v){
+						$cssHtml.='@-moz-keyframes '.$v;
+						$cssHtml.='@-webkit-keyframes '.$v;
+						$cssHtml.='@-o-keyframes '.$v;
+					}
+					preg_match_all("/animation\s*:\s*[^;]+[;|}]/is",$cssHtml,$match2);
+					foreach($match2[0] as $v){
+						$cssHtml.='-moz-'.$v;
+						$cssHtml.='-webkit-'.$v;
+						$cssHtml.='-o-'.$v;
+					}
+					$content .=$cssHtml;
+				}
+				//array(KOD_DIR_NAME,'~KOD+'),
+				$fileName = str_replace(KOD_DIR_NAME,'~kod',$template->template_resource);
+				$fileName = str_replace(array(".tpl","/","."),array("","+","_"),$fileName).".css";
+				$file = fopen(KOD_SMARTY_CSS_DIR.$fileName,'w'); // a模式就是一种追加模式，如果是w模式则会删除之前的内容再添加
+				if($file===false){
+					throw new Exception("写入文件失败，请保证路径【".KOD_SMARTY_CSS_DIR."】存在，并有写入权限");
+				}
+				fwrite($file,$content);
+				fclose($file);
+				unset($file);
+				//获取可以访问生成css的url地址
+				if(defined('KOD_SMARTY_CSS_HOST')){
+					$cssUrl = KOD_SMARTY_CSS_HOST.$fileName;
+				}else{
+					$cssUrl = "/".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName;
+					if($cssUrl==""){
+						throw new Exception("生成的css文件【".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName."】，并不能生成对应的url网址，请配置对应的rewrite规则");
+					}
+				}
+				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="'.$cssUrl.'?'.time().'"/>';
+				if(strpos($_output,'</head>')>-1){
+					$_output = preg_replace("/<style>(.*?)<\/style>/is","",$_output);
+					$_output = str_replace('</head>',"\t".$cssLinkHtml."\n</head>",$_output);
+				}else{
+					$_output = preg_replace("/<style>(.*?)<\/style>/is",$cssLinkHtml,$_output);
+				}
+
+			}else{
+			}
+		}
+		return $_output;
 //		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is',$_output,$match);
 //		if(strpos($_output,'</head>')>-1){
 //			foreach($match[0] as $cssHtml){
