@@ -4,3 +4,6 @@
 [submodule "metaPHP"]
 	path = metaPHP
 	url = https://github.com/13601313270/metaPHP.git
+[submodule "smarty"]
+	path = smarty
+	url = https://github.com/smarty-php/smarty.git
