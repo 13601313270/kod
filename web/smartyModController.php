@@ -7,8 +7,8 @@
  */
 abstract class kod_web_smartyModController{
     public $assignValueList = array();
-    abstract function init($aData);
-    abstract function finish($aData);
+//    abstract function init($aData);
+//    abstract function finish($aData);
     public function assign($k,$v){
         $this->assignValueList[$k] = $v;
     }
