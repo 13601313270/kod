@@ -43,6 +43,7 @@ final class kod_web_smarty_internal_template extends Smarty_Internal_Template{
 	}
 }
 final class kod_web_smarty extends Smarty{
+	protected $compile_dir = KOD_SMARTY_COMPILR_DIR;
 	public $template_class = 'kod_web_smarty_internal_template';
 	//对smarty里面include方法加载的tpl文件生成的php编译文件进行加工，再存入硬盘
 	public static function compilerIncludeTplHtml($allHtml,$tplFile){
