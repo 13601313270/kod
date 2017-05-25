@@ -16,7 +16,10 @@ final class kod_db_mysqlDB{
 		$this->charset = $charset;
 	}
 	public function getConnect(){
-		return mysql_connect(KOD_MYSQL_SERVER,$this->loginUser,$this->loginPass);
+		return new PDO("mysql:host=".KOD_MYSQL_SERVER.";dbname=".$this->dbName, $this->loginUser, $this->loginPass,array(
+				PDO::MYSQL_ATTR_INIT_COMMAND=>"set names ".$this->charset
+		));
+		//			PDO::MYSQL_ATTR_INIT_COMMAND => "SET sql_mode=".KOD_SQL_MODE.";set names ".$this->charset,
 	}
 
 	/**
@@ -37,18 +40,11 @@ final class kod_db_mysqlDB{
 		if($con===null){
 			$con = $this->getConnect();
 		}
-		if (!$con){
-			throw new Exception('无法连接到数据库:' . mysql_error());
+		$result = array();
+		foreach ($con->query($sql) as $row) {
+			$result[] = $row; //你可以用 echo($GLOBAL); 来看到这些值
 		}
-		$db_selected = mysql_select_db($this->dbName, $con);
-		if (!$db_selected){
-			throw new Exception("数据库【".$this->dbName."】不存在");
-		}
-		if(KOD_SQL_MODE!=""&&KOD_SQL_MODE!="KOD_SQL_MODE"){
-			mysql_query("set @@sql_mode=".KOD_SQL_MODE,$con);
-		}
-		mysql_query("SET NAMES {$this->charset}");
-		$result = mysql_query($sql,$con);
+		return $result;
 		//查询是resource
 		if($returnType=='mysql_insert_id'){
 			return mysql_insert_id();
@@ -58,8 +54,7 @@ final class kod_db_mysqlDB{
 				$returnData[] = $row;
 			}
 		}else{
-			$returnData = mysql_affected_rows();
-			if($returnData==-1){
+			if($result==-1){
 				$dataTemp = mysql_query("show tables from ".$this->dbName,$con);
 				while($row = mysql_fetch_assoc($dataTemp)){
 					$allTables[$row["Tables_in_".$this->dbName]] = $row;
@@ -124,10 +119,9 @@ final class kod_db_mysqlDB{
 					}
 				}
 			}else{
-				return $returnData;
+				return $result;
 			}
 		}
-		mysql_close($con);
-		return $returnData;
+		return $result;
 	}
 }
