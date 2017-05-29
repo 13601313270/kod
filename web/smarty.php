@@ -6,7 +6,62 @@
  * Time: 下午7:22
  */
 include_once KOD_DIR_NAME."/smarty/libs/Smarty.class.php";
+final class kod_web_smarty_internal_runtime_inheritance extends Smarty_Internal_Runtime_Inheritance{
+	public function endChild(Smarty_Internal_Template $tpl, $template = null, $uid = null, $func = null)
+	{
+		preg_match('/(.*).layout.tpl/',$template,$match);
+		$oldBeRewriteValue = array();
+		if(file_exists(webDIR.$match[1].'.layout.php')) {
+			include_once(webDIR.$match[1].'.layout.php');
+			$className = 'kodTmp_'.implode('_',explode('/',$match[1]));
+			$modController = new $className();
+
+			if(method_exists($modController,'init')){
+				$callArgs = array();
+				$method = new ReflectionMethod($className, 'init');
+				foreach($method->getParameters() as $v){
+					$argName = $v->getName();
+					if(isset($data[$argName])){
+						$callArgs[] = $data[$argName];
+					}else{
+						if($v->isOptional()){
+							$callArgs[] = $v->getDefaultValue();
+						}else{
+							throw new Exception('模块'.$match[1].'必填字段字段'.$argName);
+						}
+					}
+				}
+				$reflectionMethod = new ReflectionMethod($className,'init');
+				$reflectionMethod->invokeArgs($modController,$callArgs);
+			}
+			foreach($modController->assignValueList as $k=>$v){
+				if(isset($tpl->tpl_vars[$k])){
+					$oldBeRewriteValue[$k] = $tpl->tpl_vars[$k];
+				}
+				$tpl->assign($k,$v);
+			}
+		}
+		if(file_exists(webDIR.$match[1].'.layout.php')) {
+			$modController->finish($data);
+		}
+		parent::endChild($tpl, $template, $uid, $func);
+//		//将传入的值还原回来
+//		foreach($modController->assignValueList as $k=>$v){
+//			unset($tpl->tpl_vars[$k]);
+//		}
+//		foreach($oldBeRewriteValue as $k=>$v){
+//			$tpl->assign($k,$v);
+//		}
+	}
+}
 final class kod_web_smarty_internal_template extends Smarty_Internal_Template{
+	public function _loadInheritance()
+	{
+		if (!isset($this->inheritance)) {
+			$this->inheritance = new kod_web_smarty_internal_runtime_inheritance();
+		}
+	}
+
 	public function _subTemplateRender($template, $cache_id, $compile_id, $caching, $cache_lifetime, $data, $scope,
 									   $forceTplCache, $uid = null, $content_func = null)
 	{
