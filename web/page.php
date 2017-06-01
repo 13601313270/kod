@@ -81,7 +81,9 @@ class kod_web_page extends stdClass{
 		if(strpos($phoCode,'</head>')>-1){
 			foreach($match[0] as $cssHtml){
 				$phoCode = str_replace($cssHtml,'',$phoCode);
-				$phoCode = str_replace('</head>',"\t".$cssHtml."\n</head>",$phoCode);
+				$phoCode = explode('<body>',$phoCode);
+				$phoCode[0] = str_replace('</head>',"\t".$cssHtml."\n</head>",$phoCode[0]);
+				$phoCode = implode('<body>',$phoCode);
 			}
 		}
 
@@ -90,7 +92,10 @@ class kod_web_page extends stdClass{
 		if(strpos($phoCode,'</head>')>-1){
 			foreach($match[0] as $jsHtml){
 				$phoCode = str_replace($jsHtml,'',$phoCode);
-				$phoCode = str_replace('</head>',"\t".$jsHtml."\n</head>",$phoCode);
+				$phoCode = explode('<body>',$phoCode);
+				$phoCode[0] = str_replace('</head>',"\t".$jsHtml."\n</head>",$phoCode[0]);
+				$phoCode = implode('<body>',$phoCode);
+
 			}
 		}
 
@@ -112,7 +117,9 @@ class kod_web_page extends stdClass{
 		if(strpos($_output,'</head>')>-1){
 			foreach($match[0] as $cssHtml){
 				$_output = str_replace($cssHtml,'',$_output);
-				$_output = str_replace('</head>',"\t".$cssHtml."\n</head>",$_output);
+				$_output = explode('<body>',$_output);
+				$_output[0] = str_replace('</head>',"\t".$cssHtml."\n</head>",$_output[0]);
+				$_output = implode('<body>',$_output);
 			}
 		}
 //		if(KOD_REWRITE_HTML_LINK){
