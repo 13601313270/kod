@@ -64,7 +64,9 @@ class kod_web_page extends stdClass{
 				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="'.$cssUrl.'?'.time().'"/>';
 				if(strpos($tpl_source,'</head>')>-1){
 					$tpl_source = preg_replace("/<style>(.*?)<\/style>/is","",$tpl_source);
-					$tpl_source = str_replace('</head>',"\t".$cssLinkHtml."\n</head>",$tpl_source);
+					$tpl_source = explode('<body>',$tpl_source);
+					$tpl_source[0] = str_replace('</head>',"\t".$cssLinkHtml."\n</head>",$tpl_source[0]);
+					$tpl_source = implode('<body>',$tpl_source);
 				}else{
 					$tpl_source = preg_replace("/<style>(.*?)<\/style>/is",$cssLinkHtml,$tpl_source);
 				}
