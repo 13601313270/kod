@@ -41,7 +41,9 @@ final class kod_db_mysqlDB{
 			$con = $this->getConnect();
 		}
 		$result = array();
-		foreach ($con->query($sql) as $row) {
+		$temp = $con->query($sql);
+		$temp->setFetchMode(PDO::FETCH_ASSOC);
+		foreach ($temp as $row) {
 			$result[] = $row; //你可以用 echo($GLOBAL); 来看到这些值
 		}
 		return $result;
