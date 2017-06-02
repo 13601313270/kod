@@ -4,7 +4,7 @@
  * User: mfw
  * Date: 16/2/1
  * Time: 下午2:29
- * @method static bool set($key,$val,$flag,$expire)
+ * @method static bool set($key,$val)
  * @method static string get($key)
  * @method static string delete($key)
  */
@@ -13,22 +13,23 @@ class kod_db_memcache{
 	protected static $host = KOD_MEMCACHE_HOST;
 	protected static $port = KOD_MEMCACHE_PORT;
 	private function __construct(){}
-	/**
-	 * @param Memcache $MemcacheObj
-	*/
-	public static function initServerConnect(&$MemcacheObj){
-		$MemcacheObj->connect(static::$host, static::$port);
-	}
 	public static function __callStatic($function_name,$args){
 		if(KOD_MEMCACHE_OPEN){
-			$memcache_obj = new Memcache;
-			static::initServerConnect($memcache_obj);
+			if(KOD_MEMCACHE_TYPE==KOD_MEMCACHE_TYPE_MEMCACHE){
+				$memcache_obj = new Memcache;
+				$memcache_obj->connect(static::$host, static::$port);
+			}elseif(KOD_MEMCACHE_TYPE==KOD_MEMCACHE_TYPE_MEMCACHED){
+				$memcache_obj = new Memcached;
+				$memcache_obj->addServer('127.0.0.1','11211');
+				if($function_name=='set' && count($args)==4){
+					$args = array($args[0],$args[1],$args[3]);
+				}
+			}
 			return call_user_func_array(array($memcache_obj,$function_name),$args);
 		}else{
 			throw new Exception('请在配置文件中开启memcache功能,define(\'KOD_MEMCACHE_OPEN\',true);');
 		}
 	}
-
 	//自增服务
 	public static function adding($key,$numAdd,$function,$step=0){
 		$value = static::get($key);
