@@ -96,3 +96,9 @@ spl_autoload_register(function($model){
 		}
 	}
 });
+
+if(function_exists('kod_ControlAutoLoad')){
+	spl_autoload_register('kod_ControlAutoLoad');
+}else{
+	throw new Exception('请定义kod_ControlAutoLoad控制器使用的自动加载类');
+}
