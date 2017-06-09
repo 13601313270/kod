@@ -146,6 +146,7 @@ class kod_web_page extends stdClass{
 		echo json_encode($allData);
 	}
 	public function fetch($smartyTpl,$returnHtml=false){
+		spl_autoload_unregister('kod_ControlAutoLoad');
 		$this->beforeFetch();
 		$smartyObject = new kod_web_smarty();
 //		$smartyObject = new Smarty();
