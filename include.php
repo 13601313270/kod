@@ -72,21 +72,6 @@ if(KOD_MEMCACHE_OPEN){
 	}
 }
 
-//是否开启metaPHP
-if(!defined('KOD_METAPHP_OPEN')){
-	define('KOD_METAPHP_OPEN',true);
-}
-if(KOD_METAPHP_OPEN){
-	include_once(KOD_DIR_NAME.'/metaPHP/include.php');
-	//必须定义一个自定义的存储函数
-	if(!function_exists('metaPHPSave_Function')){
-		function metaPHPSave_Function($file,$code){
-			var_dump('meta计划往'.$file.'存储代码,可以通过自定义metaPHPSave_Function函数来实现自定义的存储');
-			echo $code;
-		}
-	}
-}
-
 date_default_timezone_set('PRC');
 
 spl_autoload_register(function($model){
