@@ -77,6 +77,7 @@ if(!empty($result)){
     }
     unset($result);
     unset($new);
+    chdir('./http/');
     if(substr($_SERVER["SCRIPT_FILENAME"],strlen($_SERVER["SCRIPT_FILENAME"])-1,1)=="/"){
         include_once($_SERVER["SCRIPT_FILENAME"]."index.php");
     }else{
