@@ -73,8 +73,9 @@ abstract class kod_db_mysqlSingle{
 				$this->returnSql = false;
 				return $sql;
 			}else{
-				$returnData = current($this->dbHandle->runsql($sql,'default',$con));
+				$returnData = $this->dbHandle->runsql($sql,'default',$con);
 				if(!empty($returnData)){
+					$returnData = current($returnData);
 					//扩展外键数据
 					foreach($this->getForeignDataKeys as $kk=>$vv){
 						//echo $this->foreignKey[$kk]."\n";
