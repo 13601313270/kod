@@ -42,11 +42,15 @@ final class kod_db_mysqlDB{
 		}
 		$result = array();
 		$temp = $con->query($sql);
-		$temp->setFetchMode(PDO::FETCH_ASSOC);
-		foreach ($temp as $row) {
-			$result[] = $row; //你可以用 echo($GLOBAL); 来看到这些值
+		if($temp!==false){
+			$temp->setFetchMode(PDO::FETCH_ASSOC);
+			foreach ($temp as $row) {
+				$result[] = $row; //你可以用 echo($GLOBAL); 来看到这些值
+			}
+			return $result;
+		}else{
+			return false;
 		}
-		return $result;
 		//查询是resource
 		if($returnType=='mysql_insert_id'){
 			return mysql_insert_id();
