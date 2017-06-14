@@ -58,25 +58,9 @@ if(!empty($result)){
     $_SERVER["SCRIPT_FILENAME"] = $new["path"];
     $_SERVER["SCRIPT_NAME"] = $new["path"];
     $_SERVER["PHP_SELF"] = $new["path"];
-    $columnList = explode("&",$new["query"]);
-    $_GET = array();
-    foreach($columnList as $column){
-        $temp = explode("=",$column);
-        $key = urldecode($temp[0]);
-        if(strpos($key,"[")>-1){
-            if(preg_match("/(\w+)\[(\w+)\]/",$key,$match)){
-                if(!isset($_GET[$match[1]])){
-                    $_GET[$match[1]] = array();
-                }
-                $_GET[$match[1]][$match[2]] = urldecode($temp[1]);
-            }
-        }else{
-            $_GET[$key] = urldecode($temp[1]);
-        }
-        $_REQUEST[$temp[0]] = $temp[1];
-    }
     unset($result);
     unset($new);
+
     chdir('./http/');
     if(substr($_SERVER["SCRIPT_FILENAME"],strlen($_SERVER["SCRIPT_FILENAME"])-1,1)=="/"){
         include_once($_SERVER["SCRIPT_FILENAME"]."index.php");
