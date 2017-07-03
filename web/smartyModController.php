@@ -6,6 +6,8 @@
  * Time: 下午11:19
  */
 abstract class kod_web_smartyModController{
+    public $title = '';//名称,某些后台需要
+    public $type = 'include';//include,html
     public $assignValueList = array();
 //    abstract function init($aData);
 //    abstract function finish($aData);
