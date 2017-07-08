@@ -43,9 +43,11 @@ final class kod_web_rewrite extends kod_tool_config{
 }
 kod_web_rewrite::init(dirname(__FILE__).'/rewrite.conf');
 //双向获取
-$result = kod_web_rewrite::getPathByUrl($_SERVER["SCRIPT_URL"]);
+//$result = kod_web_rewrite::getPathByUrl($_SERVER["SCRIPT_URL"]);
+$result = kod_web_rewrite::getPathByUrl(current(explode('?',$_SERVER["REQUEST_URI"])));
 if(!empty($result)){
-    $new = parse_url(KOD_SMARTY_TEMPLATE_DIR.$result[1]);
+//    $new = parse_url(KOD_SMARTY_TEMPLATE_DIR.$result[1]);
+    $new = parse_url($result[1]);
     parse_str($new["query"],$myArray);
     $_GET = array_merge($_GET,$myArray);//后面盖住前面
     $_SERVER["SCRIPT_URL"] = $new["path"];
