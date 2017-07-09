@@ -630,11 +630,8 @@ abstract class kod_db_mysqlSingle{
 		}
 	}
 	public function deleteById($id){
-		if($this->keyDataType=='int'){
-			return $this->dbHandle->runsql("delete from ".$this->tableName." where ".$this->key."=".intval($id));
-		}else{
-			return $this->dbHandle->runsql("delete from ".$this->tableName." where ".$this->key.'="'.$id.'"');
-		}
+		$stmt = $this->dbHandle->getConnect()->prepare("delete from ".$this->tableName." where ".$this->key."=?");
+		return $stmt->execute(array($id));
 	}
 	public function deleteByIds($ids){
 		if(empty($ids)){
