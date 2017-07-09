@@ -674,7 +674,7 @@ abstract class kod_db_mysqlSingle{
 
 	function showCreateTable(){
 		$tableInfo = $this->dbHandle->runsql("show create table ".$this->dbName.".".$this->tableName);
-		if(preg_match('/CREATE TABLE ".+?"\s*\(([\S|\s]*)\)$/',$tableInfo[0]['Create Table'],$match)){
+		if(preg_match('/CREATE TABLE [`|"].+?[`|"]\s*\(([\S|\s]*)\)/',$tableInfo[0]['Create Table'],$match)){
 			$tableInfo = explode(',',$match[1]);
 			$option = array();
 			foreach($tableInfo as $k=>$v){
