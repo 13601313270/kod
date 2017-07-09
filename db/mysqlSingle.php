@@ -722,6 +722,20 @@ abstract class kod_db_mysqlSingle{
 			return array();
 		}
 	}
+	//通过数组生成添加字段的sql
+	function addColumnSql($arr){
+		foreach(array('notNull','primarykey','unique','listShowType') as $keyName){
+			if($arr[$keyName]===true || $arr[$keyName]==='true'){
+				$arr[$keyName] = true;
+			}else{
+				$arr[$keyName] = false;
+			}
+		}
+		return 'ALTER TABLE `'.$this->dbName.'`.`'.$this->tableName.'` ADD COLUMN `'.$arr['name'].
+		'` '.$arr['dataType'].
+		($arr['notNull']?' NOT NULL':'').
+		($arr['default']!==''?' DEFAULT "'.$arr['default'].'"':'');
+	}
 }
 
 //用例
