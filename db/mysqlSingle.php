@@ -548,6 +548,7 @@ abstract class kod_db_mysqlSingle{
 		$isUp = true;
 		$sql = "update ".$this->tableName." set ";
 		$sqlList = array();
+		$excuteArr = array();
 		if(gettype($params)=="string"){
 			$sql .= $params;
 		}else{
@@ -562,7 +563,8 @@ abstract class kod_db_mysqlSingle{
 						$sqlList[$this->verticalTable[$k]][$k] = $v;
 						continue;
 					}
-					$paramsTemp[] = $k."='".mysql_real_escape_string($v,$con)."'";
+					$paramsTemp[] = $k."=?";
+					$excuteArr[] = $v;
 				}else{
 					$paramsTemp[] = $v;
 				}
@@ -577,11 +579,8 @@ abstract class kod_db_mysqlSingle{
 			$lastCreateWhereStr = $where;
 		}else{
 			foreach($where as $k=>$v){
-				if(is_int($v)){
-					$paramsTemp2[] = $k.'='.$v;
-				}else{
-					$paramsTemp2[] = $k.'="'.$v.'"';
-				}
+				$paramsTemp2[] = $k.'=?';
+				$excuteArr[] = $v;
 			}
 			$lastCreateWhereStr = implode(' and ',$paramsTemp2);
 		}
@@ -592,7 +591,8 @@ abstract class kod_db_mysqlSingle{
 		}
 		try{
 			if($isUp){
-				$result = $this->dbHandle->runsql($sql,'default',$con);
+				$stmt = $this->dbHandle->getConnect()->prepare($sql);
+				$result = $stmt->execute($excuteArr);
 			}
 			if(!empty($sqlList)){
 				foreach($sqlList as $k=>$v){
