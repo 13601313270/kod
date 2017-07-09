@@ -427,9 +427,6 @@ abstract class kod_db_mysqlSingle{
 	//insert第二个函数传入default会造成错误,忘记了当初为什么不直接只能使用mysql_insert_id方式了
 	public function insert($params,$mysql_insert_id = true){
 		$con = $this->dbHandle->getConnect();
-		foreach($params as $k=>$v) {
-			$params[$k] = mysql_real_escape_string($v);
-		}
 		$verticalArr = array();
 		if(!empty($this->verticalTable)){
 			foreach($this->verticalTable as $k=>$tableName){
@@ -463,7 +460,8 @@ abstract class kod_db_mysqlSingle{
 						}
 					}
 				}else{
-					$return = $this->dbHandle->runsql($sql,'default',$con);
+					$stmt = $con->prepare("insert into ".$this->tableName." (".implode(",",array_keys($params)).") VALUES(:".implode(",:",array_keys($params)).")");
+					$return = $stmt->execute($params);
 				}
 				if(!empty($verticalArr)) {
 					$con2 = $this->dbHandle->getConnect();
