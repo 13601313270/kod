@@ -19,7 +19,7 @@ class kod_tool_imageVerifyCode{
                 rand(0,180),
                 imagecolorallocate($myImage,rand(120,255),rand(120,255),rand(120,255))
             );
-            imagesetthickness($myImage,rand(1,5));
+            imagesetthickness($myImage,rand(1,3));
             imageline($myImage,
                 rand(0,$width),
                 rand(0,$height),
@@ -46,9 +46,9 @@ class kod_tool_imageVerifyCode{
             $worldColor = imagecolorallocate($myImage,rand(0,200),rand(0,200),rand(0,200));
             $fontSize = rand($height/2.5,$height/1.5);
             $xMove = min($allWordWidth/count($strArr),$fontSize)/5;
-            $x = $allWordWidth/count($strArr)*($k+0.5) + rand(-$xMove,$xMove)+$paddingX;
+            $x = $allWordWidth/count($strArr)*($k+0.5) + rand(-$xMove,$xMove);//+$paddingX;
             $y = ($height+$fontSize)/2+rand(-10,10);
-            imagettftext($myImage, $fontSize, rand(-20,20), $x, $y, $worldColor, KOD_DIR_NAME.'/tool/imageVerifyCode.ttf',$word);
+            imagettftext($myImage, $fontSize,0, $x, $y, $worldColor, KOD_DIR_NAME.'/tool/imageVerifyCode.ttf',$word);
         }
         $this->putSomeNothing($myImage,$width,$height,3);
         header("Content-type:image/png");

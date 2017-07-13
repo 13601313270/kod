@@ -452,16 +452,21 @@ abstract class kod_db_mysqlSingle{
 				$this->returnSql = false;
 				return $sql;
 			}else{
+				$stmt = $con->prepare("insert into ".$this->tableName." (".implode(",",array_keys($params)).") VALUES(:".implode(",:",array_keys($params)).")");
+				$return = $stmt->execute($params);
 				if($mysql_insert_id){
-					$return = $this->dbHandle->runsql($sql,'mysql_insert_id',$con);
+					if($return!==false){
+						if($this->keyDataType=='int'){
+							$return = intval($con->lastInsertId());
+						}else{
+							$return = $con->lastInsertId();
+						}
+					}
 					if(!empty($verticalArr)){
 						foreach($verticalArr as $k=>$v){
 							$verticalArr[$k][$this->key] = $return;
 						}
 					}
-				}else{
-					$stmt = $con->prepare("insert into ".$this->tableName." (".implode(",",array_keys($params)).") VALUES(:".implode(",:",array_keys($params)).")");
-					$return = $stmt->execute($params);
 				}
 				if(!empty($verticalArr)) {
 					$con2 = $this->dbHandle->getConnect();
