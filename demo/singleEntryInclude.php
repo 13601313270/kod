@@ -51,7 +51,7 @@ if(!empty($result)){
     parse_str($new["query"],$myArray);
     $_GET = array_merge($_GET,$myArray);//后面盖住前面
     $_SERVER["SCRIPT_URL"] = $new["path"];
-    $_SERVER["SCRIPT_URI"] = "http://".$_SERVER["HTTP_HOST"].$new["path"];
+    $_SERVER["SCRIPT_URI"] = $_SERVER['REQUEST_SCHEME']."://".$_SERVER["HTTP_HOST"].$new["path"];
     if(!empty($new["query"])){
         $_SERVER["REQUEST_URI"] = $new["path"]."?".$new["query"];
     }else{
