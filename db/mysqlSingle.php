@@ -16,7 +16,7 @@ abstract class kod_db_mysqlSingle{
 	private static $cacheData = array();//缓存的mysql查询结果
 	protected $verticalTable = array();//纵向表字段
 	function __construct(){
-		if(empty($this->tableName)){
+		if(empty($this->getTableName())){
 			throw new Exception("类【".get_called_class()."】需要设置属性【tableName】用来说明调用的表名称");
 		}
 		$this->dbHandle = new kod_db_mysqlDB($this->dbName,$this->charset);
@@ -37,6 +37,9 @@ abstract class kod_db_mysqlSingle{
 	public function sql(){
 		$this->returnSql = true;
 		return $this;
+	}
+	protected function getTableName(){
+		return $this->tableName;
 	}
 	//通过主键的值获取单条记录了
 	public function getKeyColumnName(){
@@ -64,10 +67,10 @@ abstract class kod_db_mysqlSingle{
 			}
 			$con = null;
 			if($this->keyDataType=='int'){
-				$sql = "select ".implode(',',$selectArr)." from ".$this->tableName." where ".$this->key."=".$valueOfKey;
+				$sql = "select ".implode(',',$selectArr)." from ".$this->getTableName()." where ".$this->key."=".$valueOfKey;
 			}else{
 				$con = $this->dbHandle->getConnect();
-				$sql = "select ".implode(',',$selectArr)." from ".$this->tableName." where ".$this->key.'="'.mysql_real_escape_string($valueOfKey,$con).'"';
+				$sql = "select ".implode(',',$selectArr)." from ".$this->getTableName()." where ".$this->key.'="'.mysql_real_escape_string($valueOfKey,$con).'"';
 			}
 			if($this->returnSql){
 				$this->returnSql = false;
@@ -87,7 +90,7 @@ abstract class kod_db_mysqlSingle{
 									$returnData[$kk] = $outerArr;
 								}
 							}else{
-								throw new Exception("使用外键时,必须保证数据表【".$this->tableName."】存在【".$kk."】字段，并且在使用onlyColumn方法时,参数必须包含【".$kk."】");
+								throw new Exception("使用外键时,必须保证数据表【".$this->getTableName()."】存在【".$kk."】字段，并且在使用onlyColumn方法时,参数必须包含【".$kk."】");
 							}
 						}
 					}
@@ -122,7 +125,7 @@ abstract class kod_db_mysqlSingle{
 			$this->getListSelectColumn = array();
 		}
 		if(!empty($this->key)){
-			$returnData = $this->dbHandle->runsql("select ".implode(',',$selectArr)." from ".$this->tableName." where ".$this->key." in(".$valuesOfKey.")",$con);
+			$returnData = $this->dbHandle->runsql("select ".implode(',',$selectArr)." from ".$this->getTableName()." where ".$this->key." in(".$valuesOfKey.")",$con);
 			foreach($returnData as $k=>$v){
 				foreach($this->getForeignDataKeys as $kk=>$vv){
 					//echo $this->foreignKey[$kk]."\n";
@@ -296,7 +299,7 @@ abstract class kod_db_mysqlSingle{
 			$needToSelectVerticalTable = array_intersect($selectArr,array_keys($this->verticalTable));
 			//排除掉垂直分表的其他表字段
 			$selectArr = array_diff($selectArr,array_keys($this->verticalTable));
-			$sql.="select ".implode(",",$selectArr)." from ".$this->tableName;
+			$sql.="select ".implode(",",$selectArr)." from ".$this->getTableName();
 			$whereSql = $this->getWhereSqlByArr($arr);
 
 			if(empty($whereSql['where'])){//组合的情况现在不支持
@@ -340,9 +343,9 @@ abstract class kod_db_mysqlSingle{
 				$sql = $arr;
 			}else{
 				if(!empty($this->getListSelectColumn)){
-					$sql ="select ".implode(",",$this->getListSelectColumn)." from ".$this->tableName." where ".$arr;
+					$sql ="select ".implode(",",$this->getListSelectColumn)." from ".$this->getTableName()." where ".$arr;
 				}else{
-					$sql ="select * from ".$this->tableName." where ".$arr;
+					$sql ="select * from ".$this->getTableName()." where ".$arr;
 				}
 			}
 		}else{
@@ -446,13 +449,13 @@ abstract class kod_db_mysqlSingle{
 			}
 		}
 
-		$sql = "insert into ".$this->tableName." (".implode(",",array_keys($params)).") VALUES('".implode("','",array_values($params))."');";
+		$sql = "insert into ".$this->getTableName()." (".implode(",",array_keys($params)).") VALUES('".implode("','",array_values($params))."');";
 		try{
 			if($this->returnSql){
 				$this->returnSql = false;
 				return $sql;
 			}else{
-				$stmt = $con->prepare("insert into ".$this->tableName." (".implode(",",array_keys($params)).") VALUES(:".implode(",:",array_keys($params)).")");
+				$stmt = $con->prepare("insert into ".$this->getTableName()." (".implode(",",array_keys($params)).") VALUES(:".implode(",:",array_keys($params)).")");
 				$return = $stmt->execute($params);
 				if($mysql_insert_id){
 					if($return!==false){
@@ -488,7 +491,7 @@ abstract class kod_db_mysqlSingle{
 			if($e->getCode()==130){
 				throw new Exception($e->getMessage(),$e->getCode());
 			}
-			$allColumnsTemp = $this->dbHandle->runsql("show columns from ".$this->tableName);
+			$allColumnsTemp = $this->dbHandle->runsql("show columns from ".$this->getTableName());
 			$allColumns = array();//表中所有的字段
 			foreach($allColumnsTemp as $v){
 				$allColumns[$v["Field"]] = $v;
@@ -496,17 +499,17 @@ abstract class kod_db_mysqlSingle{
 			//mysql关键词检查
 			foreach($allColumns as $k=>$v){
 				if(in_array(strtolower($k),array('left','character'))){
-					throw new Exception("表【".$this->tableName."】定义时，使用了不建议使用的关键词【".$k."】",100);
-					//throw new Exception("表【".$this->tableName."】定义时，使用了不建议使用的关键词【".$k."】",100,$e);
+					throw new Exception("表【".$this->getTableName()."】定义时，使用了不建议使用的关键词【".$k."】",100);
+					//throw new Exception("表【".$this->getTableName()."】定义时，使用了不建议使用的关键词【".$k."】",100,$e);
 				}
 			}
 			//检查相同主键的值是否已经存在
 			foreach($allColumns as $k=>$v){
 				if($v["Key"]=="PRI" && $v['Extra']!='auto_increment'){
-					$count = $this->dbHandle->runsql("select count(*) as count from ".$this->tableName." where ".$v["Field"].'="'.$params[$k].'";');
+					$count = $this->dbHandle->runsql("select count(*) as count from ".$this->getTableName()." where ".$v["Field"].'="'.$params[$k].'";');
 					if($count[0]["count"]>0){
-						//throw new Exception("向表【".$this->tableName."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100,$e);
-						throw new Exception("向表【".$this->tableName."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100);
+						//throw new Exception("向表【".$this->getTableName()."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100,$e);
+						throw new Exception("向表【".$this->getTableName()."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100);
 					}
 				}
 			}
@@ -518,12 +521,12 @@ abstract class kod_db_mysqlSingle{
 					switch($dataType[0]){
 						case "int":
 						case "tinyint":if(strval(intval($v))!=$v){
-							throw new Exception("向表【".$this->tableName."】插入数据时,字段【".$k."】传入的值为【".$v."】，这个值必须是整形",110);
+							throw new Exception("向表【".$this->getTableName()."】插入数据时,字段【".$k."】传入的值为【".$v."】，这个值必须是整形",110);
 						}break;
 					}
 				}else{
-					//throw new Exception("向表【".$this->tableName."】插入数据时，传入的字段【".$k."】在表结构中不存在",111,$e);
-					throw new Exception("向表【".$this->tableName."】插入数据时，传入的字段【".$k."】在表结构中不存在",111);
+					//throw new Exception("向表【".$this->getTableName()."】插入数据时，传入的字段【".$k."】在表结构中不存在",111,$e);
+					throw new Exception("向表【".$this->getTableName()."】插入数据时，传入的字段【".$k."】在表结构中不存在",111);
 				}
 			}
 			//检查不能为空的字段是否全部传入
@@ -532,16 +535,16 @@ abstract class kod_db_mysqlSingle{
 				if($v["Null"]=="NO"){
 					if(!isset($params[$k])){
 						if($v["Extra"]!="auto_increment"){
-							throw new Exception("向表【".$this->tableName."】插入数据时【".$k."】字段为必填字段",120);
+							throw new Exception("向表【".$this->getTableName()."】插入数据时【".$k."】字段为必填字段",120);
 						}
 					}
 					$allMustWrite[$k]=$v;
 				}
 			}
 
-			throw new Exception("向表【".$this->tableName."】插入数据未知错误".$e->getMessage(),130,$e);
+			throw new Exception("向表【".$this->getTableName()."】插入数据未知错误".$e->getMessage(),130,$e);
 			//未完成
-			$keys = $this->dbHandle->runsql("show create table ".$this->tableName);
+			$keys = $this->dbHandle->runsql("show create table ".$this->getTableName());
 			print_r($keys);exit;
 			exit;
 			$err = new Exception("插入失败",0);
@@ -551,7 +554,7 @@ abstract class kod_db_mysqlSingle{
 	public function update($where,$params){
 		$con = $this->dbHandle->getConnect();
 		$isUp = true;
-		$sql = "update ".$this->tableName." set ";
+		$sql = "update ".$this->getTableName()." set ";
 		$sqlList = array();
 		$excuteArr = array();
 		if(gettype($params)=="string"){
@@ -601,7 +604,7 @@ abstract class kod_db_mysqlSingle{
 			}
 			if(!empty($sqlList)){
 				foreach($sqlList as $k=>$v){
-					$resultIds = $this->dbHandle->runsql('select '.$this->key.' from '.$this->tableName.' where '.$lastCreateWhereStr,'default',$con);
+					$resultIds = $this->dbHandle->runsql('select '.$this->key.' from '.$this->getTableName().' where '.$lastCreateWhereStr,'default',$con);
 					if($resultIds && count($resultIds)>0){
 						$id_ = array();
 						$con = $this->dbHandle->getConnect();
@@ -635,20 +638,20 @@ abstract class kod_db_mysqlSingle{
 		}
 	}
 	public function deleteById($id){
-		$stmt = $this->dbHandle->getConnect()->prepare("delete from ".$this->tableName." where ".$this->key."=?");
+		$stmt = $this->dbHandle->getConnect()->prepare("delete from ".$this->getTableName()." where ".$this->key."=?");
 		return $stmt->execute(array($id));
 	}
 	public function deleteByIds($ids){
 		if(empty($ids)){
 			return false;
 		}elseif($this->keyDataType=='int'){
-			$sql = "delete from ".$this->tableName." where ".$this->key." in(".implode(',',$ids).")";
+			$sql = "delete from ".$this->getTableName()." where ".$this->key." in(".implode(',',$ids).")";
 		}else{
 			$con = $this->dbHandle->getConnect();
 			foreach($ids as $k=>$v){
 				$ids[$k] = mysql_real_escape_string($v,$con);
 			}
-			$sql = "delete from ".$this->tableName." where ".$this->key." in(\"".implode('","',$ids)."\")";
+			$sql = "delete from ".$this->getTableName()." where ".$this->key." in(\"".implode('","',$ids)."\")";
 		}
 		if($this->returnSql){
 			$this->returnSql = false;
@@ -663,7 +666,7 @@ abstract class kod_db_mysqlSingle{
 		if($whereSql!=''){
 			$whereSql = ' where '.$whereSql;
 		}
-		$sql = "delete from ".$this->tableName.$whereSql;
+		$sql = "delete from ".$this->getTableName().$whereSql;
 		if($this->returnSql){
 			$this->returnSql = false;
 			return $sql;
@@ -673,7 +676,7 @@ abstract class kod_db_mysqlSingle{
 	}
 
 	function showCreateTable(){
-		$tableInfo = $this->dbHandle->runsql("show create table ".$this->dbName.".".$this->tableName);
+		$tableInfo = $this->dbHandle->runsql("show create table ".$this->dbName.".".$this->getTableName());
 		if(preg_match('/CREATE TABLE [`|"].+?[`|"]\s*\(([\S|\s]*)\)/',$tableInfo[0]['Create Table'],$match)){
 			$tableInfo = explode(',',$match[1]);
 			$option = array();
@@ -731,7 +734,7 @@ abstract class kod_db_mysqlSingle{
 				$arr[$keyName] = false;
 			}
 		}
-		return 'ALTER TABLE `'.$this->dbName.'`.`'.$this->tableName.'` ADD COLUMN `'.$arr['name'].
+		return 'ALTER TABLE `'.$this->dbName.'`.`'.$this->getTableName().'` ADD COLUMN `'.$arr['name'].
 		'` '.$arr['dataType'].
 		($arr['notNull']?' NOT NULL':'').
 		($arr['default']!==''?' DEFAULT "'.$arr['default'].'"':'');
