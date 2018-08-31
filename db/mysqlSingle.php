@@ -450,106 +450,101 @@ abstract class kod_db_mysqlSingle{
 		}
 
 		$sql = "insert into ".$this->getTableName()." (".implode(",",array_keys($params)).") VALUES('".implode("','",array_values($params))."');";
-		try{
-			if($this->returnSql){
-				$this->returnSql = false;
-				return $sql;
-			}else{
-				$stmt = $con->prepare("insert into ".$this->getTableName()." (".implode(",",array_keys($params)).") VALUES(:".implode(",:",array_keys($params)).")");
-				$return = $stmt->execute($params);
-				if($mysql_insert_id){
-					if($return!==false){
-						if($this->keyDataType=='int'){
-							$return = intval($con->lastInsertId());
-						}else{
-							$return = $con->lastInsertId();
-						}
-					}
-					if(!empty($verticalArr)){
-						foreach($verticalArr as $k=>$v){
-							$verticalArr[$k][$this->key] = $return;
-						}
-					}
-				}
-				if(!empty($verticalArr)) {
-					$con2 = $this->dbHandle->getConnect();
-					foreach ($verticalArr as $tableName => $attrKeyVal) {
-						$isIsset = $this->dbHandle->runsql('select count(*) as count from '.$tableName.' where '.$this->key.'='.$return, 'default', $con);
-						if($isIsset[0]['count']==0){
-							$sql = "insert into " . $tableName . " (" . implode(",", array_keys($attrKeyVal)) . ") VALUES('" . implode("','", array_values($attrKeyVal)) . "');";
-							try{
-								$this->dbHandle->runsql($sql, 'default', $con2);
-							}catch (Exception $e){
-								throw new Exception("执行此语句时出错".$sql,130);
-							}
-						}
-					}
-				}
-				return $return;
-			}
-		}catch(Exception $e){
-			if($e->getCode()==130){
-				throw new Exception($e->getMessage(),$e->getCode());
-			}
-			$allColumnsTemp = $this->dbHandle->runsql("show columns from ".$this->getTableName());
-			$allColumns = array();//表中所有的字段
-			foreach($allColumnsTemp as $v){
-				$allColumns[$v["Field"]] = $v;
-			}
-			//mysql关键词检查
-			foreach($allColumns as $k=>$v){
-				if(in_array(strtolower($k),array('left','character'))){
-					throw new Exception("表【".$this->getTableName()."】定义时，使用了不建议使用的关键词【".$k."】",100);
-					//throw new Exception("表【".$this->getTableName()."】定义时，使用了不建议使用的关键词【".$k."】",100,$e);
-				}
-			}
-			//检查相同主键的值是否已经存在
-			foreach($allColumns as $k=>$v){
-				if($v["Key"]=="PRI" && $v['Extra']!='auto_increment'){
-					$count = $this->dbHandle->runsql("select count(*) as count from ".$this->getTableName()." where ".$v["Field"].'="'.$params[$k].'";');
-					if($count[0]["count"]>0){
-						//throw new Exception("向表【".$this->getTableName()."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100,$e);
-						throw new Exception("向表【".$this->getTableName()."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100);
-					}
-				}
-			}
-			//检查数据类型错误
-			foreach($params as $k=>$v){
-				if($allColumns[$k]){
-					$dataType = explode("(",$allColumns[$k]["Type"]);
-					//$dataTypeName = $dataType[0];
-					switch($dataType[0]){
-						case "int":
-						case "tinyint":if(strval(intval($v))!=$v){
-							throw new Exception("向表【".$this->getTableName()."】插入数据时,字段【".$k."】传入的值为【".$v."】，这个值必须是整形",110);
-						}break;
-					}
-				}else{
-					//throw new Exception("向表【".$this->getTableName()."】插入数据时，传入的字段【".$k."】在表结构中不存在",111,$e);
-					throw new Exception("向表【".$this->getTableName()."】插入数据时，传入的字段【".$k."】在表结构中不存在",111);
-				}
-			}
-			//检查不能为空的字段是否全部传入
-			$allMustWrite = array();
-			foreach($allColumns as $k=>$v){
-				if($v["Null"]=="NO"){
-					if(!isset($params[$k])){
-						if($v["Extra"]!="auto_increment"){
-							throw new Exception("向表【".$this->getTableName()."】插入数据时【".$k."】字段为必填字段",120);
-						}
-					}
-					$allMustWrite[$k]=$v;
-				}
-			}
+        if($this->returnSql){
+            $this->returnSql = false;
+            return $sql;
+        }
+        $stmt = $con->prepare("insert into ".$this->getTableName()." (".implode(",",array_keys($params)).") VALUES(:".implode(",:",array_keys($params)).")");
+        $return = $stmt->execute($params);
+        if($mysql_insert_id){
+            if($return!==false){
+                if($this->keyDataType=='int'){
+                    $return = intval($con->lastInsertId());
+                }else{
+                    $return = $con->lastInsertId();
+                }
+            }
+            if(!empty($verticalArr)){
+                foreach($verticalArr as $k=>$v){
+                    $verticalArr[$k][$this->key] = $return;
+                }
+            }
+        }
+        if(!empty($verticalArr)) {
+            $con2 = $this->dbHandle->getConnect();
+            foreach ($verticalArr as $tableName => $attrKeyVal) {
+                $isIsset = $this->dbHandle->runsql('select count(*) as count from '.$tableName.' where '.$this->key.'='.$return, 'default', $con);
+                if($isIsset[0]['count']==0){
+                    $sql = "insert into " . $tableName . " (" . implode(",", array_keys($attrKeyVal)) . ") VALUES('" . implode("','", array_values($attrKeyVal)) . "');";
+                    try{
+                        $this->dbHandle->runsql($sql, 'default', $con2);
+                    }catch (Exception $e){
+                        throw new Exception("执行此语句时出错".$sql,130);
+                    }
+                }
+            }
+        }
+        if($return === false) {
+            $allColumnsTemp = $this->dbHandle->runsql("show columns from ".$this->getTableName());
+            $allColumns = array();//表中所有的字段
+            foreach($allColumnsTemp as $v){
+                $allColumns[$v["Field"]] = $v;
+            }
+            //mysql关键词检查
+            foreach($allColumns as $k=>$v){
+                if(in_array(strtolower($k),array('left','character'))){
+                    throw new Exception("表【".$this->getTableName()."】定义时，使用了不建议使用的关键词【".$k."】",100);
+                    //throw new Exception("表【".$this->getTableName()."】定义时，使用了不建议使用的关键词【".$k."】",100,$e);
+                }
+            }
+            //检查相同主键的值是否已经存在
+            foreach($allColumns as $k=>$v){
+                if($v["Key"]=="PRI" && $v['Extra']!='auto_increment'){
+                    $count = $this->dbHandle->runsql("select count(*) as count from ".$this->getTableName()." where ".$v["Field"].'="'.$params[$k].'";');
+                    if($count[0]["count"]>0){
+                        //throw new Exception("向表【".$this->getTableName()."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100,$e);
+                        throw new Exception("向表【".$this->getTableName()."】插入数据时，主键【".$k."】值为【".$params[$k]."】的数据已经存在",100);
+                    }
+                }
+            }
+            //检查数据类型错误
+            foreach($params as $k=>$v){
+                if($allColumns[$k]){
+                    $dataType = explode("(",$allColumns[$k]["Type"]);
+                    //$dataTypeName = $dataType[0];
+                    switch($dataType[0]){
+                        case "int":
+                        case "tinyint":if(strval(intval($v))!=$v){
+                            throw new Exception("向表【".$this->getTableName()."】插入数据时,字段【".$k."】传入的值为【".$v."】，这个值必须是整形",110);
+                        }break;
+                    }
+                }else{
+                    //throw new Exception("向表【".$this->getTableName()."】插入数据时，传入的字段【".$k."】在表结构中不存在",111,$e);
+                    throw new Exception("向表【".$this->getTableName()."】插入数据时，传入的字段【".$k."】在表结构中不存在",111);
+                }
+            }
+            //检查不能为空的字段是否全部传入
+            $allMustWrite = array();
+            foreach($allColumns as $k=>$v){
+                if($v["Null"]=="NO"){
+                    if(!isset($params[$k])){
+                        if($v["Extra"]!="auto_increment"){
+                            throw new Exception("向表【".$this->getTableName()."】插入数据时【".$k."】字段为必填字段",120);
+                        }
+                    }
+                    $allMustWrite[$k]=$v;
+                }
+            }
 
-			throw new Exception("向表【".$this->getTableName()."】插入数据未知错误".$e->getMessage(),130,$e);
-			//未完成
-			$keys = $this->dbHandle->runsql("show create table ".$this->getTableName());
-			print_r($keys);exit;
-			exit;
-			$err = new Exception("插入失败",0);
-			print_r($err);
-		}
+            throw new Exception("向表【".$this->getTableName()."】插入数据未知错误".$e->getMessage(),130,$e);
+            //未完成
+            $keys = $this->dbHandle->runsql("show create table ".$this->getTableName());
+            print_r($keys);exit;
+            exit;
+            $err = new Exception("插入失败",0);
+            print_r($err);
+        }
+        return $return;
 	}
 	public function update($where,$params){
 		$con = $this->dbHandle->getConnect();
