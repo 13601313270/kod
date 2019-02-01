@@ -55,10 +55,9 @@ abstract class kod_tool_config implements kod_tool_configInterface{
 		}
 		$name = $_pathArr[0];
 		array_shift($_pathArr);
-		$pregKeyWord = self::$pregChar;
 		$isNeedPreg = false;
-		foreach($pregKeyWord as $v){
-			$pos = strstr($name,$v);
+		foreach(self::$pregChar as $v){
+			$pos = strpos($name,$v);
 			if($pos && substr($name,$pos-2,1)!=="\\"){
 				$isNeedPreg = true;
 				break;

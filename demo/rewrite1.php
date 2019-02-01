@@ -18,8 +18,8 @@ final class kod_web_rewrite extends kod_tool_config{
         $before = array();
         while(!feof($file)) {
             $oneLine = fgets($file);
+            $oneLine = str_replace('    ', "\t", $oneLine);
             $oneArr = explode(" ",$oneLine);
-            $oneArr[count($oneArr)-1] = trim($oneArr[count($oneArr)-1]);
             if(count($oneArr)==1){
                 if(substr($oneArr[0],0,2)=="\t\t"){
                     $before = array($before[0],$before[1],trim($oneArr[0]));
@@ -29,8 +29,10 @@ final class kod_web_rewrite extends kod_tool_config{
                     $before = array(trim($oneArr[0]));
                 }
                 continue;
-            }elseif(count($oneArr)==0){
+            } elseif (count($oneArr) == 0) {
                 continue;
+            } else {
+                $oneArr[count($oneArr) - 1] = trim($oneArr[count($oneArr) - 1]);
             }
             $oneArr[0] = implode('',$before).trim($oneArr[0]);
             $lineList[] = $oneArr;
