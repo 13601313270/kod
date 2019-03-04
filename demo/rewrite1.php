@@ -1,40 +1,47 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: mfw
  * Date: 2016/12/21
  * Time: 上午2:38
  */
-final class kod_web_rewrite extends kod_tool_config{
-    public static function getArrByStr($str){
+final class kod_web_rewrite extends kod_tool_config
+{
+    public static function getArrByStr($str)
+    {
         $splitStr = '/';
-        $arr = explode($splitStr,$str);
+        $arr = explode($splitStr, $str);
         return $arr;
     }
+
     public static function getPageContent($confPath)
     {
         $file = fopen($confPath, "r") or exit("Unable to open file!");
         $lineList = array();
         $before = array();
-        while(!feof($file)) {
+        while (!feof($file)) {
             $oneLine = fgets($file);
             $oneLine = str_replace('    ', "\t", $oneLine);
-            $oneArr = explode(" ",$oneLine);
-            if(count($oneArr)==1){
-                if(substr($oneArr[0],0,2)=="\t\t"){
-                    $before = array($before[0],$before[1],trim($oneArr[0]));
-                }elseif(substr($oneArr[0],0,1)=="\t"){
-                    $before = array($before[0],trim($oneArr[0]));
-                }else{
+            $oneArr = explode(" ", $oneLine);
+            if (count($oneArr) == 1) {// 是目录
+                if (preg_match('/^\t+/', $oneArr[0], $match)) {
+                    $before[] = trim($oneArr[0]);
+                } else {
                     $before = array(trim($oneArr[0]));
                 }
                 continue;
             } elseif (count($oneArr) == 0) {
                 continue;
             } else {
+                if (preg_match('/^\t+/', $oneArr[0], $match)) {
+                    $before = array_slice($before, 0, strlen($match[0]));
+                } else {
+                    $before = array();
+                }
                 $oneArr[count($oneArr) - 1] = trim($oneArr[count($oneArr) - 1]);
             }
-            $oneArr[0] = implode('',$before).trim($oneArr[0]);
+            $oneArr[0] = implode('', $before) . trim($oneArr[0]);
             $lineList[] = $oneArr;
 
         }
@@ -42,7 +49,8 @@ final class kod_web_rewrite extends kod_tool_config{
         return $lineList;
     }
 }
-kod_web_rewrite::init(dirname(__FILE__).'/test.conf');
+
+kod_web_rewrite::init(dirname(__FILE__) . '/test.conf');
 //双向获取
 $result = kod_web_rewrite::getPathByUrl('/sales/234.html');
 print_r($result);
