@@ -1,42 +1,262 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: mfw
  * Date: 16/5/9
  * Time: 下午8:10
  */
-abstract class kod_db_mysqlTable{
-    protected static $dbName = KOD_COMMENT_MYSQLDB;
-    protected static $tableName;
-    protected static $key = '';//当存在主键的时候，可以根据主键调用一些快捷函数
-    protected static $keyDataType = 'int';//主键的数据类型int varchar
-    protected static $charset = KOD_COMMENT_MYSQLDB_CHARSET;
 
-    private static $getListSelectColumn = array();
-    private static function getDbHandle(){
-        return new kod_db_mysqlDB(self::$dbName,self::$charset);
+class kod_db_mysqlTable extends kod_tool_lifeCycle
+{
+    protected $dbName = '';
+    protected $tableName = '';
+    protected $key = '';
+    protected $keyDataType = 'int';
+
+    protected $foreignKey = array();//外键，可以通过设置获取语法糖
+    private static $cacheData = array();//缓存的mysql查询结果
+
+    /**
+     * create
+     * 函数的含义说明
+     *
+     * @access public
+     * @since 1.0
+     * @return $this
+     */
+    static function create()
+    {
+        $temp = get_called_class();
+        return new $temp();
     }
-    //通过主键获取
-    public static function getByKey($valueOfKey,$select='*'){
-        if(empty(self::$key)){return false;}
-        if($select=='*'){
-            $selectArr = '*';
-        }else{
-            if(is_array($select)){
-                $selectArr = $select;
-            }else{
-                $selectArr = explode(",",$select);
-            }
-            if(!empty(self::$getListSelectColumn)){
-                $selectArr = array_intersect($selectArr,self::$getListSelectColumn);
+
+    public function getTableName()
+    {
+        return 'lesson';
+    }
+
+    public $stage = ['array', 'sql', 'data'];
+
+    private function getWhereStr($arr)
+    {
+        // 必须是一个只有and/or为唯一key的数组
+        $mergeType = '';
+        if ($arr['and']) {
+            $mergeType = 'and';
+        } else if ($arr['or']) {
+            $mergeType = 'or';
+        }
+        $returnSqlArr = [];
+        $returnSlotData = [];
+        foreach ($arr[$mergeType] as $item) {
+            if (array_keys(array_keys($item)) === array_keys($item)) {
+                if (in_array($item[1], ['=', '>', '<', '!=', '>=', '<='])) {
+                    if (is_numeric($item[2])) {
+                        $returnSqlArr[] = $item[0] . $item[1] . $item[2];
+                    } else {
+                        $returnSqlArr[] = $item[0] . $item[1] . '?';
+                        $returnSlotData[] = $item[2];
+                    }
+                } elseif ($item[1] === 'in') {
+                    if (array_keys(array_keys($item[2])) === array_keys($item[2])) {
+                        $temp = array();
+                        foreach ($item[2] as $enum) {
+                            if (is_numeric($enum)) {
+                                $temp[] = $enum;
+                            } else {
+                                $temp[] = '?';
+                                $returnSlotData[] = $enum;
+                            }
+                        }
+                        $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . implode(',', $temp) . ')';
+                    }
+                }
+            } else {
+                $temp = $this->getWhereStr($item);
+                $returnSqlArr[] = '(' . $temp[0] . ')';
+                $returnSlotData = array_merge($returnSlotData, $temp[1]);
             }
         }
-        if(self::$keyDataType=='int'){
-            $sql = "select ".implode(',',$selectArr)." from ".self::$tableName." where ".self::$key."=".$valueOfKey;
-        }else{
-            $sql = "select ".implode(',',$selectArr)." from ".self::$tableName." where ".self::$key.'="'.mysql_real_escape_string($valueOfKey,$con).'"';
-        }
-        $con = self::getDbHandle();
-        $con->runsql($sql,'default',$con->getConnect());
+        return [implode(' ' . $mergeType . ' ', $returnSqlArr), $returnSlotData];
+    }
+
+    public function __construct()
+    {
+        $this->bind('array', function ($arr) {
+            // 初始化select
+            if (empty($arr["select"])) {
+                $selectArr = array("*");
+            } else {
+                if (is_array($arr["select"])) {
+                    $selectArr = $arr["select"];
+                } else {
+                    $selectArr = explode(",", $arr["select"]);
+                }
+            }
+            //需要查询的掉垂直分表的其他表字段
+//            $needToSelectVerticalTable = array_intersect($selectArr, array_keys($this->verticalTable));
+            //排除掉垂直分表的其他表字段
+//            $selectArr = array_diff($selectArr, array_keys($this->verticalTable));
+//            $sql .= "select " . implode(",", $selectArr) . " from " . $this->getTableName();
+//            $whereSql = $this->getWhereSqlByArr($arr);
+            return array(
+                'select' => $selectArr,
+                'from' => $this->tableName,
+            );
+        });
+        $this->bind('sql', function ($arr) {
+            $arr['where'] = $this->getWhereStr($arr['where']);
+            $sql = 'select ' . implode(',', $arr['select']) . ' from ' . $arr['from'];
+            if ($arr['where']) {
+                $sql .= ' where ' . $arr['where'][0];
+            }
+            return [$sql, $arr['where'][1]];
+        });
+
+        $this->bind('data', function ($step) {
+            return kod_db_mysqlDB::create($this->dbName)->sql($step[0], $step[1]);
+        });
+    }
+
+    public function where($arr)
+    {
+        $this->bind('array', function ($data) use ($arr) {
+            $whereParams = array();
+            if (array_keys($arr) === range(0, count($arr) - 1)) {
+//                foreach ($arr as $v) {
+//                    $whereParams[] = $v;
+//                }
+            } else {
+                $whereParams = array(
+                    'and' => array()
+                );
+                foreach ($arr as $k => $v) {
+                    $whereParams['and'][] = [$k, '=', $v];
+                }
+            }
+            $data['where'] = $whereParams;
+            return $data;
+        });
+
+//        格式
+//        array(
+//            'and' => [
+//                ['id', '=', 0],
+//                ['c', '>', "c"],
+//                array(
+//                    'or' => [
+//                        ['time', '>', "2018-10-10"],
+//                        ['a', '!=', "a"],
+//                        ['b', 'in', ['bin', 2, 'bin3', 4]]
+//                    ]
+//                ),
+//                ['d', '>', "d"],
+//                ['b', 'in', [1, 2, 3, 4]]
+//            ]
+//        );
+        return $this;
+    }
+
+    public function getCount()
+    {
+        $this->bind('array', function ($arr) {
+            $arr['select'] = array('count(*) as count');
+            return $arr;
+        });
+        return $this;
+    }
+
+    public function cacheInPv()
+    {
+        $cacheSql = '';
+        $this->bind('sql', function ($sql) use ($cacheSql) {
+            if (isset(self::$cacheData[$sql])) {
+                $cacheSql = $sql;
+                $this->breakAll();
+                return self::$cacheData[$sql];
+            }
+            return $sql;
+        });
+        $this->bind('data', function ($returnData) use ($cacheSql) {
+            if (!isset(self::$cacheData[$cacheSql])) {
+                self::$cacheData[$cacheSql] = $returnData;
+                $this->breakAll();
+            }
+            return $returnData;
+        });
+        return $this;
+    }
+
+    public function join($table)
+    {
+        return $this;
+    }
+
+    public function foreignData($foreignKey, $select = '*')
+    {
+        $this->bind('data', function ($data) use ($foreignKey, $select) {
+            $allKeys = array_column($data, 'course');
+            if ($this->foreignKey[$foreignKey]) {
+                $dbObject = new $this->foreignKey[$foreignKey];
+                $outerArr = $dbObject->onlyColumn($select)->getByKeys($allKeys);
+                $temp = array();
+                foreach ($outerArr as $item) {
+                    $temp[$item['id']] = $item;
+                }
+                foreach ($data as $k => $v) {
+                    $data[$k][$foreignKey] = $temp[$v[$foreignKey]];
+                }
+            } else {
+                throw new Exception('没有这个外键');
+                exit;
+            }
+            return $data;
+        });
+        return $this;
+    }
+
+    public function sql()
+    {
+        $this->bind('sql', function ($sql) {
+            $this->breakAll();
+            return $sql;
+        });
+        return $this;
+    }
+
+    public function select($list)
+    {
+        $this->bind('array', function ($arr) use ($list) {
+            if (is_string($list)) {
+                $arr['select'] = explode(',', $list);
+            } else if (count($arr['select']) === 1 && $arr['select'][0] === '*') {
+                $arr['select'] = $list;
+            } else {
+                $arr['select'] = array_intersect($arr['select'], $list);
+            }
+            return $arr;
+        });
+        return $this;
+    }
+
+    public function get()
+    {
+        return $this->action();
+    }
+
+    public function getList($params)
+    {
+        $this->where($params);
+        return $this->action();
+    }
+
+    public function getByKey($id)
+    {
+        $key = $this->key;
+        $this->where(array(
+            $key => $id
+        ));
+        return ($this->action())[0];
     }
 }
