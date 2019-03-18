@@ -16,6 +16,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     protected $foreignKey = array();//外键，可以通过设置获取语法糖
     private static $cacheData = array();//缓存的mysql查询结果
+    protected $joinList = array(); // 垂直分表
 
     /**
      * create
@@ -33,10 +34,10 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function getTableName()
     {
-        return 'lesson';
+        return $this->tableName;
     }
 
-    public $stage = ['array', 'sql', 'data'];
+    public $stage = ['array', 'sql', 'afterSql', 'data'];
 
     private function getWhereStr($arr)
     {
@@ -49,33 +50,35 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         }
         $returnSqlArr = [];
         $returnSlotData = [];
-        foreach ($arr[$mergeType] as $item) {
-            if (array_keys(array_keys($item)) === array_keys($item)) {
-                if (in_array($item[1], ['=', '>', '<', '!=', '>=', '<='])) {
-                    if (is_numeric($item[2])) {
-                        $returnSqlArr[] = $item[0] . $item[1] . $item[2];
-                    } else {
-                        $returnSqlArr[] = $item[0] . $item[1] . '?';
-                        $returnSlotData[] = $item[2];
-                    }
-                } elseif ($item[1] === 'in') {
-                    if (array_keys(array_keys($item[2])) === array_keys($item[2])) {
-                        $temp = array();
-                        foreach ($item[2] as $enum) {
-                            if (is_numeric($enum)) {
-                                $temp[] = $enum;
-                            } else {
-                                $temp[] = '?';
-                                $returnSlotData[] = $enum;
-                            }
+        if ($arr && $arr[$mergeType]) {
+            foreach ($arr[$mergeType] as $item) {
+                if (array_keys(array_keys($item)) === array_keys($item)) {
+                    if (in_array($item[1], ['=', '>', '<', '!=', '>=', '<='])) {
+                        if (is_numeric($item[2])) {
+                            $returnSqlArr[] = $item[0] . $item[1] . $item[2];
+                        } else {
+                            $returnSqlArr[] = $item[0] . $item[1] . '?';
+                            $returnSlotData[] = $item[2];
                         }
-                        $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . implode(',', $temp) . ')';
+                    } elseif ($item[1] === 'in') {
+                        if (array_keys(array_keys($item[2])) === array_keys($item[2])) {
+                            $temp = array();
+                            foreach ($item[2] as $enum) {
+                                if (is_numeric($enum)) {
+                                    $temp[] = $enum;
+                                } else {
+                                    $temp[] = '?';
+                                    $returnSlotData[] = $enum;
+                                }
+                            }
+                            $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . implode(',', $temp) . ')';
+                        }
                     }
+                } else {
+                    $temp = $this->getWhereStr($item);
+                    $returnSqlArr[] = '(' . $temp[0] . ')';
+                    $returnSlotData = array_merge($returnSlotData, $temp[1]);
                 }
-            } else {
-                $temp = $this->getWhereStr($item);
-                $returnSqlArr[] = '(' . $temp[0] . ')';
-                $returnSlotData = array_merge($returnSlotData, $temp[1]);
             }
         }
         return [implode(' ' . $mergeType . ' ', $returnSqlArr), $returnSlotData];
@@ -108,12 +111,21 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         $this->bind('sql', function ($arr) {
             $arr['where'] = $this->getWhereStr($arr['where']);
             $sql = 'select ' . implode(',', $arr['select']) . ' from ' . $arr['from'];
-            if ($arr['where']) {
+            if ($arr['where'] && !empty($arr['where'][0])) {
                 $sql .= ' where ' . $arr['where'][0];
             }
             return [$sql, $arr['where'][1]];
         });
 
+        $this->bind('afterSql', function ($step) {
+            if ($this->orderBy) {
+                $step[0] .= ' order by ' . $this->orderBy;
+            }
+            if ($this->limit) {
+                $step[0] .= ' limit ' . $this->limit;
+            }
+            return $step;
+        });
         $this->bind('data', function ($step) {
             return kod_db_mysqlDB::create($this->dbName)->sql($step[0], $step[1]);
         });
@@ -188,8 +200,94 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this;
     }
 
-    public function join($table)
+    protected function _join($joinType, $table, $select = '*')
     {
+        $tableKey = 'asdfdsaf' . rand(100, 10000);
+        if (gettype($table) === 'object' && $table instanceof kod_db_mysqlTable) {
+            $this->bind('array', function ($arr) use ($joinType, $select, $tableKey) {
+                foreach ($arr["select"] as $k => $item) {
+                    if (!strpos($item, '.')) {
+                        $arr["select"][$k] = $this->getTableName() . '.' . $item;
+                    }
+                }
+                // 初始化select
+                if (!is_array($select)) {
+                    $select = explode(',', $select);
+                }
+                foreach ($select as $k => $item) {
+                    $select[$k] = $tableKey . '.' . $item;
+                }
+                $arr["select"] = array_merge($arr["select"], $select);
+                return $arr;
+            });
+            $this->bind('sql', function ($sql) use ($joinType, $table, $tableKey) {
+                $key = array_keys($this->joinList[get_class($table)])[0];
+                $key2 = array_values($this->joinList[get_class($table)])[0];
+                $childSql = $table->sql()->get();
+                $sql[0] .= ' ' . $joinType . ' (' . $childSql[0] . ') as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
+                $sql[1] = array_merge($sql[1], $childSql[1]);
+                return $sql;
+            });
+        } else {
+            $tableObj = new $table();
+            $joinTableName = $tableObj->getTableName();
+            $this->bind('array', function ($arr) use ($joinType, $select, $tableKey) {
+                if ($select !== '*') {
+                    foreach ($arr["select"] as $k => $item) {
+                        if (!strpos($item, '.')) {
+                            $arr["select"][$k] = $this->getTableName() . '.' . $item;
+                        }
+                    }
+                    // 初始化select
+                    if (!is_array($select)) {
+                        $select = explode(',', $select);
+                    }
+                    foreach ($select as $k => $item) {
+                        $select[$k] = $tableKey . '.' . $item;
+                    }
+                    $arr["select"] = array_merge($arr["select"], $select);
+
+                }
+                return $arr;
+            });
+            $this->bind('sql', function ($sql) use ($joinType, $joinTableName, $table, $tableKey) {
+                $key = array_keys($this->joinList[$table])[0];
+                $key2 = array_values($this->joinList[$table])[0];
+                $sql[0] .= ' ' . $joinType . ' ' . $joinTableName . ' as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
+                return $sql;
+            });
+        }
+        return $this;
+    }
+
+    public function leftJoin($table, $select = '*')
+    {
+        return $this->_join('left join', $table, $select);
+    }
+
+    public function fullJoin($table, $select = '*')
+    {
+        return $this->_join('full join', $table, $select);
+    }
+
+    public function join($table, $select = '*')
+    {
+        return $this->_join('join', $table, $select);
+    }
+
+    private $limit = '';
+
+    public function limit($limit)
+    {
+        $this->limit = $limit;
+        return $this;
+    }
+
+    private $orderBy = '';
+
+    public function orderBy($orderBy)
+    {
+        $this->orderBy = $orderBy;
         return $this;
     }
 
@@ -218,7 +316,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function sql()
     {
-        $this->bind('sql', function ($sql) {
+        $this->bind('afterSql', function ($sql) {
             $this->breakAll();
             return $sql;
         });

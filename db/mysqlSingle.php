@@ -48,7 +48,7 @@ abstract class kod_db_mysqlSingle
         return $this;
     }
 
-    protected function getTableName()
+    public function getTableName()
     {
         return $this->tableName;
     }
