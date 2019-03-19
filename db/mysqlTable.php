@@ -344,6 +344,14 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this;
     }
 
+    public function first()
+    {
+        $this->bind('data', function ($returnData) {
+            return current($returnData);
+        });
+        return $this;
+    }
+
     public function get()
     {
         return $this->action();
@@ -355,6 +363,12 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this->action();
     }
 
+    public function exist()
+    {
+        $data = $this->action();
+        return !empty($data);
+    }
+
     public function getByKey($id)
     {
         $key = $this->key;
@@ -362,6 +376,74 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             $key => $id
         ));
         return ($this->action())[0];
+    }
+
+    public function insert($params, $mysql_insert_id = true)
+    {
+        $verticalArr = array();
+        if (!empty($this->verticalTable)) {
+            foreach ($this->verticalTable as $k => $tableName) {
+                if (isset($params[$k])) {
+                    if (!isset($verticalArr[$tableName])) {
+                        if ($mysql_insert_id == true) {
+                            $verticalArr[$tableName] = array();
+                        } else {
+                            $verticalArr[$tableName] = array();
+                            $verticalArr[$tableName][$this->key] = $params[$this->key];
+
+                        }
+                    }
+                    $verticalArr[$tableName][$k] = $params[$k];
+                    unset($params[$k]);
+                }
+            }
+        }
+        $sql = array(
+            "insert into " . $this->getTableName() . " (" . implode(",", array_keys($params)) . ") VALUES(:" . implode(",:", array_keys($params)) . ")",
+            $params
+        );
+        return kod_db_mysqlDB::create($this->dbName)->sql($sql[0], $sql[1]);
+    }
+
+    public function update($where, $params)
+    {
+        $sql = "update " . $this->getTableName() . " set ";
+        $sqlList = array();
+        $excuteArr = array();
+        if (gettype($params) == "string") {
+            $sql .= $params;
+        } else {
+            $paramsTemp = array();
+            $keyValueType = true;
+            if (array_keys(array_keys($params)) === array_keys($params)) {//索引型数组
+                $keyValueType = false;
+            }
+            foreach ($params as $k => $v) {
+                if ($keyValueType) {
+                    if (!empty($this->verticalTable) && !empty($this->verticalTable[$k])) {
+                        $sqlList[$this->verticalTable[$k]][$k] = $v;
+                        continue;
+                    }
+                    $paramsTemp[] = $k . "=?";
+                    $excuteArr[] = $v;
+                } else {
+                    $paramsTemp[] = $v;
+                }
+            }
+            $sql .= implode(",", $paramsTemp);
+        }
+        $paramsTemp2 = array();
+        if (gettype($where) == "string") {
+            $lastCreateWhereStr = $where;
+        } else {
+            foreach ($where as $k => $v) {
+                $paramsTemp2[] = $k . '=?';
+                $excuteArr[] = $v;
+            }
+            $lastCreateWhereStr = implode(' and ', $paramsTemp2);
+        }
+        $sql .= " where " . $lastCreateWhereStr;
+        return kod_db_mysqlDB::create($this->dbName)->sql($sql, $excuteArr);
     }
 }
 
