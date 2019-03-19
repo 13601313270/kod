@@ -42,6 +42,9 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
     private function getWhereStr($arr)
     {
         // 必须是一个只有and/or为唯一key的数组
+        if (is_string($arr)) {
+            return [$arr, array()];
+        }
         $mergeType = '';
         if ($arr['and']) {
             $mergeType = 'and';
@@ -121,8 +124,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             if ($this->orderBy) {
                 $step[0] .= ' order by ' . $this->orderBy;
             }
-            if ($this->limit) {
-                $step[0] .= ' limit ' . $this->limit;
+            if ($this->limit_) {
+                $step[0] .= ' limit ' . $this->limit_;
             }
             return $step;
         });
@@ -134,10 +137,14 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
     public function where($arr)
     {
         $this->bind('array', function ($data) use ($arr) {
-            $whereParams = array();
-            if (array_keys($arr) === range(0, count($arr) - 1)) {
+            if (is_string($arr)) {
+                $whereParams = $arr;
+            } else if (array_keys($arr) === range(0, count($arr) - 1)) {
+                $whereParams = array(
+                    'and' => array()
+                );
 //                foreach ($arr as $v) {
-//                    $whereParams[] = $v;
+//                    $whereParams['and'][] = $v;
 //                }
             } else {
                 $whereParams = array(
@@ -202,11 +209,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     protected function _join($joinType, $table, $select = '*')
     {
-        $tableKey = 'asdfdsaf' . rand(100, 10000);
+        $tableKey = 'table' . rand(10000, 90000);
         if (gettype($table) === 'object' && $table instanceof kod_db_mysqlTable) {
             $this->bind('array', function ($arr) use ($joinType, $select, $tableKey) {
                 foreach ($arr["select"] as $k => $item) {
-                    if (!strpos($item, '.')) {
+                    if (!strpos($item, '.') && strpos($item, '(') === false) {
                         $arr["select"][$k] = $this->getTableName() . '.' . $item;
                     }
                 }
@@ -246,7 +253,6 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                         $select[$k] = $tableKey . '.' . $item;
                     }
                     $arr["select"] = array_merge($arr["select"], $select);
-
                 }
                 return $arr;
             });
@@ -275,11 +281,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this->_join('join', $table, $select);
     }
 
-    private $limit = '';
+    private $limit_ = '';
 
     public function limit($limit)
     {
-        $this->limit = $limit;
+        $this->limit_ = $limit;
         return $this;
     }
 
@@ -358,3 +364,12 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return ($this->action())[0];
     }
 }
+
+/*
+$mddObj->leftJoin('mdd_feature_info', $item['feature'])
+    ->join(
+        mdd_service_info_new::create()->where($serviceWhere)
+    )
+    ->limit($per * ($page - 1) . ',' . $per)
+    ->get();
+ * */
