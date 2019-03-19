@@ -271,6 +271,15 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this->_join('left join', $table, $select);
     }
 
+    public function sqlAfter($addSql)
+    {
+        $this->bind('sql', function ($sql) use ($addSql) {
+            $sql[0] .= ' ' . $addSql;
+            return $sql;
+        });
+        return $this;
+    }
+
     public function fullJoin($table, $select = '*')
     {
         return $this->_join('full join', $table, $select);
