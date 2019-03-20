@@ -37,7 +37,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this->tableName;
     }
 
-    public $stage = ['array', 'sql', 'afterSql', 'data'];
+    public $stage = ['select', 'join', 'sql', 'afterSql', 'data'];
 
     private function getWhereStr($arr)
     {
@@ -89,7 +89,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function __construct()
     {
-        $this->bind('array', function ($arr) {
+        $this->bind('select', function ($arr) {
             // 初始化select
             if (empty($arr["select"])) {
                 $selectArr = array("*");
@@ -108,16 +108,22 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 //            $whereSql = $this->getWhereSqlByArr($arr);
             return array(
                 'select' => $selectArr,
-                'from' => $this->tableName,
             );
         });
+        $this->bind('join', function ($data) {
+            $data['join'] = ['', []];
+            return $data;
+        });
         $this->bind('sql', function ($arr) {
+            $sql = 'select ' . implode(',', $arr['select']) . ' from ' . $this->tableName;
+            if ($arr['join']) {
+                $sql .= $arr['join'][0];
+            }
             $arr['where'] = $this->getWhereStr($arr['where']);
-            $sql = 'select ' . implode(',', $arr['select']) . ' from ' . $arr['from'];
             if ($arr['where'] && !empty($arr['where'][0])) {
                 $sql .= ' where ' . $arr['where'][0];
             }
-            return [$sql, $arr['where'][1]];
+            return [$sql, array_merge($arr['join'][1], $arr['where'][1])];
         });
 
         $this->bind('afterSql', function ($step) {
@@ -136,7 +142,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function where($arr)
     {
-        $this->bind('array', function ($data) use ($arr) {
+        $this->bind('select', function ($data) use ($arr) {
             if (is_string($arr)) {
                 $whereParams = $arr;
             } else if (array_keys($arr) === range(0, count($arr) - 1)) {
@@ -179,7 +185,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function getCount()
     {
-        $this->bind('array', function ($arr) {
+        $this->bind('select', function ($arr) {
             $arr['select'] = array('count(*) as count');
             return $arr;
         });
@@ -210,59 +216,42 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
     protected function _join($joinType, $table, $select = '*')
     {
         $tableKey = 'table' . rand(10000, 90000);
-        if (gettype($table) === 'object' && $table instanceof kod_db_mysqlTable) {
-            $this->bind('array', function ($arr) use ($joinType, $select, $tableKey) {
-                foreach ($arr["select"] as $k => $item) {
-                    if (!strpos($item, '.') && strpos($item, '(') === false) {
-                        $arr["select"][$k] = $this->getTableName() . '.' . $item;
-                    }
+        $this->bind('select', function ($arr) use ($joinType, $select, $tableKey) {
+            foreach ($arr["select"] as $k => $item) {
+                if (!strpos($item, '.') && strpos($item, '(') === false) {
+                    $arr["select"][$k] = $this->getTableName() . '.' . $item;
                 }
-                // 初始化select
-                if (!is_array($select)) {
-                    $select = explode(',', $select);
-                }
-                foreach ($select as $k => $item) {
-                    $select[$k] = $tableKey . '.' . $item;
-                }
-                $arr["select"] = array_merge($arr["select"], $select);
-                return $arr;
-            });
-            $this->bind('sql', function ($sql) use ($joinType, $table, $tableKey) {
-                $key = array_keys($this->joinList[get_class($table)])[0];
-                $key2 = array_values($this->joinList[get_class($table)])[0];
+            }
+            // 初始化select
+            if (!is_array($select)) {
+                $select = explode(',', $select);
+            }
+            foreach ($select as $k => $item) {
+                $select[$k] = $tableKey . '.' . $item;
+            }
+            $arr["select"] = array_merge($arr["select"], $select);
+            return $arr;
+        });
+        $this->bind('join', function ($data) use ($joinType, $table, $tableKey) {
+            if (gettype($table) === 'object' && $table instanceof kod_db_mysqlTable) {
+                $class = get_class($table);
+                $key = array_keys($this->joinList[$class])[0];
+                $key2 = array_values($this->joinList[$class])[0];
                 $childSql = $table->sql()->get();
-                $sql[0] .= ' ' . $joinType . ' (' . $childSql[0] . ') as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
-                $sql[1] = array_merge($sql[1], $childSql[1]);
-                return $sql;
-            });
-        } else {
-            $tableObj = new $table();
-            $joinTableName = $tableObj->getTableName();
-            $this->bind('array', function ($arr) use ($joinType, $select, $tableKey) {
-                if ($select !== '*') {
-                    foreach ($arr["select"] as $k => $item) {
-                        if (!strpos($item, '.')) {
-                            $arr["select"][$k] = $this->getTableName() . '.' . $item;
-                        }
-                    }
-                    // 初始化select
-                    if (!is_array($select)) {
-                        $select = explode(',', $select);
-                    }
-                    foreach ($select as $k => $item) {
-                        $select[$k] = $tableKey . '.' . $item;
-                    }
-                    $arr["select"] = array_merge($arr["select"], $select);
-                }
-                return $arr;
-            });
-            $this->bind('sql', function ($sql) use ($joinType, $joinTableName, $table, $tableKey) {
-                $key = array_keys($this->joinList[$table])[0];
-                $key2 = array_values($this->joinList[$table])[0];
-                $sql[0] .= ' ' . $joinType . ' ' . $joinTableName . ' as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
-                return $sql;
-            });
-        }
+                $joinTableName = $childSql[0];
+                $data['join'][0] .= ' ' . $joinType . ' (' . $joinTableName . ') as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
+                $data['join'][1] = array_merge($data['join'][1], $childSql[1]);
+            } else {
+                $tableObj = new $table();
+                $joinTableName = $tableObj->getTableName();
+                $class = $table;
+                $key = array_keys($this->joinList[$class])[0];
+                $key2 = array_values($this->joinList[$class])[0];
+                $data['join'][0] .= ' ' . $joinType . ' ' . $joinTableName . ' as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
+            }
+            return $data;
+
+        });
         return $this;
     }
 
@@ -340,7 +329,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function select($list)
     {
-        $this->bind('array', function ($arr) use ($list) {
+        $this->bind('select', function ($arr) use ($list) {
             if (is_string($list)) {
                 $arr['select'] = explode(',', $list);
             } else if (count($arr['select']) === 1 && $arr['select'][0] === '*') {

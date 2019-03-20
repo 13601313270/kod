@@ -57,6 +57,9 @@ final class kod_db_mysqlDB
     public function sql($sql, $data = array())
     {
         $con = $this->getConnect();
+        // 在创建连接后，加入
+        $con->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false);
+        $con->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         $sth = $con->prepare($sql);
         $sth->setFetchMode(PDO::FETCH_ASSOC);
         $sth->execute($data);
