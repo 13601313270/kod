@@ -61,9 +61,14 @@ final class kod_db_mysqlDB
         $con->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false);
         $con->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         $sth = $con->prepare($sql);
-        $sth->setFetchMode(PDO::FETCH_ASSOC);
-        $sth->execute($data);
-        return $sth->fetchAll();
+        if ($sth !== false) {
+            $sth->setFetchMode(PDO::FETCH_ASSOC);
+            $sth->execute($data);
+            return $sth->fetchAll();
+        } else {
+            throw new Exception('sql报错');
+        }
+
     }
 
     public function runsql($sql, $returnType = 'default', $con = null)

@@ -127,6 +127,9 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         });
 
         $this->bind('afterSql', function ($step) {
+            if ($this->groupBy) {
+                $step[0] .= ' group by ' . $this->groupBy;
+            }
             if ($this->orderBy) {
                 $step[0] .= ' order by ' . $this->orderBy;
             }
@@ -255,6 +258,14 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this;
     }
 
+    /**
+     * leftJoin
+     * 函数的含义说明
+     *
+     * @access public
+     * @since 1.0
+     * @return $this
+     */
     public function leftJoin($table, $select = '*')
     {
         return $this->_join('left join', $table, $select);
@@ -269,11 +280,27 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this;
     }
 
+    /**
+     * fullJoin
+     * 函数的含义说明
+     *
+     * @access public
+     * @since 1.0
+     * @return $this
+     */
     public function fullJoin($table, $select = '*')
     {
         return $this->_join('full join', $table, $select);
     }
 
+    /**
+     * join
+     * 函数的含义说明
+     *
+     * @access public
+     * @since 1.0
+     * @return $this
+     */
     public function join($table, $select = '*')
     {
         return $this->_join('join', $table, $select);
@@ -292,6 +319,14 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
     public function orderBy($orderBy)
     {
         $this->orderBy = $orderBy;
+        return $this;
+    }
+
+    private $groupBy = '';
+
+    public function groupBy($groupBy)
+    {
+        $this->groupBy = $groupBy;
         return $this;
     }
 
@@ -342,12 +377,18 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this;
     }
 
-    public function first()
+    public function first($column = '')
     {
-        $this->bind('data', function ($returnData) {
-            return current($returnData);
-        });
-        return $this;
+        if ($column) {
+            $this->select($column);
+        }
+        $returnData = $this->action();
+        $data = current($returnData);
+        if ($column) {
+            return $data[$column];
+        } else {
+            return $data;
+        }
     }
 
     public function get()
