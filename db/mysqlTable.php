@@ -242,11 +242,17 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                 $key2 = array_values($this->joinList[$class])[0];
                 $childSql = $table->sql()->get();
                 $joinTableName = $childSql[0];
+                if ($this->dbName !== $table->dbName) {
+                    $joinTableName = $table->dbName . '.' . $joinTableName;
+                }
                 $data['join'][0] .= ' ' . $joinType . ' (' . $joinTableName . ') as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
                 $data['join'][1] = array_merge($data['join'][1], $childSql[1]);
             } else {
                 $tableObj = new $table();
                 $joinTableName = $tableObj->getTableName();
+                if ($this->dbName !== $tableObj->dbName) {
+                    $joinTableName = $tableObj->dbName . '.' . $joinTableName;
+                }
                 $class = $table;
                 $key = array_keys($this->joinList[$class])[0];
                 $key2 = array_values($this->joinList[$class])[0];
