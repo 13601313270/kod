@@ -416,7 +416,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function getByKey($id)
     {
-        $key = $this->key;
+        $key = $this->tableName . '.' . $this->key;
         $this->where(array(
             $key => $id
         ));
