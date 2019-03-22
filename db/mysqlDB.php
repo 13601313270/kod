@@ -66,7 +66,7 @@ final class kod_db_mysqlDB
             $sth->execute($data);
             return $sth->fetchAll();
         } else {
-            throw new Exception('sql报错');
+            throw new Exception('sql报错' . $sql);
         }
 
     }
