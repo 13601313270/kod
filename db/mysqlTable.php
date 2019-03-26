@@ -498,7 +498,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 /*
 $mddObj->leftJoin('mdd_feature_info', $item['feature'])
     ->join(
-        mdd_service_info_new::create()->where($serviceWhere)
+        mdd_service_info::create()->where($serviceWhere)
     )
     ->limit($per * ($page - 1) . ',' . $per)
     ->get();
