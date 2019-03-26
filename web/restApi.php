@@ -9,7 +9,7 @@
 abstract class kod_web_restApi
 {
     static public $instance;//声明一个静态变量（保存在类中唯一的一个实例）
-    static public $action = '';
+    static protected $action = '';
 
     static public function getinstance($action = '')
     {
