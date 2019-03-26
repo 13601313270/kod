@@ -254,6 +254,9 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     $joinTableName = $tableObj->dbName . '.' . $joinTableName;
                 }
                 $class = $table;
+                if (!isset($this->joinList[$class])) {
+                    throw new Exception('类【' . get_called_class() . '】的joinList中没有【' . $class . '】类的配置');
+                }
                 $key = array_keys($this->joinList[$class])[0];
                 $key2 = array_values($this->joinList[$class])[0];
                 $data['join'][0] .= ' ' . $joinType . ' ' . $joinTableName . ' as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
