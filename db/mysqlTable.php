@@ -417,6 +417,16 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return !empty($data);
     }
 
+    public function count()
+    {
+        $this->bind('select', function ($arr) {
+            $arr['select'] = array('count(*) as count');
+            return $arr;
+        });
+        $data = $this->action();
+        return $data[0]['count'];
+    }
+
     public function getByKey($id)
     {
         $key = $this->tableName . '.' . $this->key;
