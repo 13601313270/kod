@@ -160,7 +160,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     'and' => array()
                 );
                 foreach ($arr as $k => $v) {
-                    $whereParams['and'][] = [$k, '=', $v];
+                    if (in_array(substr($k, -2), array('>=', '<=', '<>'))) {
+                        $whereParams['and'][] = [substr($k, 0, -2), substr($k, -2), $v];
+                    } else if (in_array(substr($k, -1), array('>', '<'))) {
+                        $whereParams['and'][] = [substr($k, 0, -1), substr($k, -1), $v];
+                    } else {
+                        $whereParams['and'][] = [$k, '=', $v];
+                    }
                 }
             }
             $data['where'] = $whereParams;
