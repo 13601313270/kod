@@ -100,14 +100,9 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     $selectArr = explode(",", $arr["select"]);
                 }
             }
-            //需要查询的掉垂直分表的其他表字段
-//            $needToSelectVerticalTable = array_intersect($selectArr, array_keys($this->verticalTable));
-            //排除掉垂直分表的其他表字段
-//            $selectArr = array_diff($selectArr, array_keys($this->verticalTable));
-//            $sql .= "select " . implode(",", $selectArr) . " from " . $this->getTableName();
-//            $whereSql = $this->getWhereSqlByArr($arr);
             return array(
                 'select' => $selectArr,
+                'from' => $this->tableName
             );
         });
         $this->bind('join', function ($data) {
@@ -115,7 +110,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             return $data;
         });
         $this->bind('sql', function ($arr) {
-            $sql = 'select ' . implode(',', $arr['select']) . ' from ' . $this->tableName;
+            $sql = 'select ' . implode(',', $arr['select']) . ' from ' . $arr['from'];
             if ($arr['join']) {
                 $sql .= $arr['join'][0];
             }
@@ -244,14 +239,23 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         $this->bind('join', function ($data) use ($joinType, $table, $tableKey) {
             if (gettype($table) === 'object' && $table instanceof kod_db_mysqlTable) {
                 $tableClone = clone $table;
+                // 为啥要clone？忘了！！
                 $class = get_class($tableClone);
                 $key = array_keys($this->joinList[$class])[0];
                 $key2 = array_values($this->joinList[$class])[0];
-                $childSql = $tableClone->sql()->get();
-                $joinTableName = $childSql[0];
+
                 if ($this->dbName !== $tableClone->dbName) {
-                    $joinTableName = $tableClone->dbName . '.' . $joinTableName;
+                    $tableClone->bind('select', function ($data) use ($tableClone) {
+                        $data['from'] = $tableClone->dbName . '.' . $data['from'];
+                        return $data;
+                    });
                 }
+                $childSql = $tableClone->sql()->get();
+
+                $joinTableName = $childSql[0];
+//                if ($this->dbName !== $tableClone->dbName) {
+//                    $joinTableName = $tableClone->dbName . '.' . $joinTableName;
+//                }
                 $data['join'][0] .= ' ' . $joinType . ' (' . $joinTableName . ') as ' . $tableKey . ' on ' . $tableKey . '.' . $key2 . '=' . $this->getTableName() . '.' . $key;
                 $data['join'][1] = array_merge($data['join'][1], $childSql[1]);
             } else {
