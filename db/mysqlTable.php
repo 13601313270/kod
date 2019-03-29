@@ -14,6 +14,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
     protected $key = '';
     protected $keyDataType = 'int';
 
+    protected $dbWriteUser = KOD_MYSQL_USER;      // 数据库写账号
+    protected $dbWritePass = KOD_MYSQL_PASSWORD;  // 数据库写密码
+    protected $dbReadUser = KOD_MYSQL_USER;       // 数据库读账号
+    protected $dbReadPass = KOD_MYSQL_PASSWORD;   // 数据库读密码
+
     protected $foreignKey = array();//外键，可以通过设置获取语法糖
     private static $cacheData = array();//缓存的mysql查询结果
     protected $joinList = array(); // 垂直分表
@@ -134,7 +139,9 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             return $step;
         });
         $this->bind('data', function ($step) {
-            return kod_db_mysqlDB::create($this->dbName)->sql($step[0], $step[1]);
+            return kod_db_mysqlDB::create($this->dbName)
+                ->setUserAndPass($this->dbReadUser, $this->dbReadPass)
+                ->sql($step[0], $step[1]);
         });
     }
 
@@ -475,7 +482,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             "insert into " . $this->getTableName() . " (" . implode(",", array_keys($params)) . ") VALUES(:" . implode(",:", array_keys($params)) . ")",
             $params
         );
-        return kod_db_mysqlDB::create($this->dbName)->sql($sql[0], $sql[1]);
+        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->sql($sql[0], $sql[1]);
     }
 
     public function update($where, $params)
@@ -516,7 +523,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             $lastCreateWhereStr = implode(' and ', $paramsTemp2);
         }
         $sql .= " where " . $lastCreateWhereStr;
-        return kod_db_mysqlDB::create($this->dbName)->sql($sql, $excuteArr);
+        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->sql($sql, $excuteArr);
     }
 }
 

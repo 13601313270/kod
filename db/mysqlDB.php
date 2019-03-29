@@ -20,6 +20,24 @@ final class kod_db_mysqlDB
         $this->charset = $charset;
     }
 
+    /**
+     * setUserAndPass
+     * 设置登陆数据库的账号密码
+     *
+     * @access public
+     * @param mixed $user 账户名
+     * @param mixed $password 账户密码
+     * @since 1.0
+     * @return $this
+     */
+    public function setUserAndPass($user, $password)
+    {
+        $this->loginUser = $user;
+        $this->loginPass = $password;
+        return $this;
+
+    }
+
     public function getConnect()
     {
         return new PDO("mysql:host=" . KOD_MYSQL_SERVER . ";dbname=" . $this->dbName, $this->loginUser, $this->loginPass, array(
@@ -30,7 +48,7 @@ final class kod_db_mysqlDB
 
     /**
      * create
-     * 函数的含义说明
+     * 创建一个对象
      *
      * @access public
      * @since 1.0
