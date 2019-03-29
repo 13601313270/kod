@@ -401,7 +401,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         $returnData = $this->action();
         $data = current($returnData);
         if ($column) {
-            return $data[$column];
+            if (preg_match('/ as (.*)/', $column, $match)) {
+                return $data[$match[1]];
+            } else {
+                return $data[$column];
+            }
         } else {
             return $data;
         }
