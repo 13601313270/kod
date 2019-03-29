@@ -69,17 +69,28 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $returnSlotData[] = $item[2];
                         }
                     } elseif ($item[1] === 'in') {
-                        if (array_keys(array_keys($item[2])) === array_keys($item[2])) {
-                            $temp = array();
-                            foreach ($item[2] as $enum) {
-                                if (is_numeric($enum)) {
-                                    $temp[] = $enum;
-                                } else {
-                                    $temp[] = '?';
-                                    $returnSlotData[] = $enum;
+                        if (gettype($item[2]) === 'object' && $item[2] instanceof kod_db_mysqlTable) {
+                            $dbName = $item[2]->dbName;
+                            $item[2]->bind('select', function ($data) use ($dbName) {
+                                $data['from'] = $dbName . '.' . $data['from'];
+                                return $data;
+                            });
+                            $childSql = $item[2]->sql()->get();
+                            $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . $childSql[0] . ')';
+                            $returnSlotData = array_merge($returnSlotData, $childSql[1]);
+                        } else {
+                            if (array_keys(array_keys($item[2])) === array_keys($item[2])) {
+                                $temp = array();
+                                foreach ($item[2] as $enum) {
+                                    if (is_numeric($enum)) {
+                                        $temp[] = $enum;
+                                    } else {
+                                        $temp[] = '?';
+                                        $returnSlotData[] = $enum;
+                                    }
                                 }
+                                $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . implode(',', $temp) . ')';
                             }
-                            $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . implode(',', $temp) . ')';
                         }
                     }
                 } else {
@@ -191,6 +202,30 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 //                ['b', 'in', [1, 2, 3, 4]]
 //            ]
 //        );
+        return $this;
+    }
+
+    /**
+     * in
+     * 设置in的条件
+     *
+     * @access public
+     * @param mixed $columnKey 键
+     * @param mixed $columnArr 值数组
+     * @since 1.0
+     * @return $this
+     */
+    public function in($columnKey, $columnArr)
+    {
+        $this->bind('select', function ($data) use ($columnKey, $columnArr) {
+            if (!isset($data['where'])) {
+                $data['where'] = array(
+                    'and' => array()
+                );
+            }
+            $data['where']['and'][] = [$columnKey, 'in', $columnArr];
+            return $data;
+        });
         return $this;
     }
 
