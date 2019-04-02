@@ -126,6 +126,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             return $data;
         });
         $this->bind('sql', function ($arr) {
+            foreach ($arr['select'] as $k => $v) {
+                if (in_array($v, array('desc'))) {
+                    $arr['select'][$k] = '`' . $v . '`';
+                }
+            }
             $sql = 'select ' . implode(',', $arr['select']) . ' from ' . $arr['from'];
             if ($arr['join']) {
                 $sql .= $arr['join'][0];
