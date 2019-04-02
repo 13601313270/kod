@@ -11,7 +11,15 @@ abstract class kod_web_restApi
     static public $instance;//声明一个静态变量（保存在类中唯一的一个实例）
     static protected $action = '';
 
-    static public function getinstance($action = '')
+    /**
+     * getInstance
+     * 截获post请求
+     *
+     * @access public
+     * @since 1.0
+     * @return $this
+     */
+    static public function getInstance($action = '')
     {
         if ($action !== '') {
             self::$action = $action;
@@ -43,7 +51,7 @@ abstract class kod_web_restApi
      */
     public static function post($where = array())
     {
-        self::getinstance()->newCheck(function () use ($where) {
+        self::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($_POST)) {
                     $data = json_decode(file_get_contents("php://input"), true);
@@ -69,7 +77,7 @@ abstract class kod_web_restApi
                 return false;
             }
         });
-        return self::getinstance();
+        return self::getInstance();
     }
 
     /**
@@ -83,7 +91,7 @@ abstract class kod_web_restApi
     public static function get($where = array())
     {
         $class = get_called_class();
-        $class::getinstance()->newCheck(function () use ($where) {
+        $class::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 if (is_array($where)) {
                     if (count($where) > 0) {
@@ -103,7 +111,7 @@ abstract class kod_web_restApi
                 return false;
             }
         });
-        return self::getinstance();
+        return self::getInstance();
     }
 
     /**
@@ -116,7 +124,7 @@ abstract class kod_web_restApi
      */
     public static function put($where = array())
     {
-        self::getinstance()->newCheck(function () use ($where) {
+        self::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
                 $data = json_decode(file_get_contents("php://input"), true);
                 if (is_array($where)) {
@@ -137,7 +145,7 @@ abstract class kod_web_restApi
                 return false;
             }
         });
-        return self::getinstance();
+        return self::getInstance();
     }
 
     public function run(Closure $callback)

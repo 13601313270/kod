@@ -9,7 +9,7 @@
 
 class kod_db_mysqlTable extends kod_tool_lifeCycle
 {
-    protected $dbName = '';
+    protected $dbName = KOD_COMMENT_MYSQLDB;
     protected $tableName = '';
     protected $key = '';
     protected $keyDataType = 'int';
@@ -370,9 +370,14 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     private $limit_ = '';
 
-    public function limit($limit)
+    public function limit($limit, $limit2 = '')
     {
-        $this->limit_ = $limit;
+        if ($limit2) {
+            $this->limit_ = intval($limit) . ',' . intval($limit2);
+        } else {
+            $this->limit_ = intval($limit);
+        }
+
         return $this;
     }
 
