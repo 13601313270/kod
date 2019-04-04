@@ -442,6 +442,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             } else if (count($arr['select']) === 1 && $arr['select'][0] === '*') {
                 $arr['select'] = $list;
             } else {
+                // 外层再次调用select，取交集
                 $arr['select'] = array_intersect($arr['select'], $list);
             }
             return $arr;
