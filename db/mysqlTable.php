@@ -264,9 +264,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this;
     }
 
-    protected function _join($joinType, $table, $select = '*')
+    protected function _join($joinType, $table, $select = '*', $aliasTableName = '')
     {
-        $tableKey = 'table' . rand(10000, 90000);
+        if ($aliasTableName === '') {
+            $tableKey = 'table' . rand(10000, 90000);
+        } else {
+            $tableKey = $aliasTableName;
+        }
         $this->bind('select', function ($arr) use ($joinType, $select, $tableKey) {
             foreach ($arr["select"] as $k => $item) {
                 if (!strpos($item, '.') && strpos($item, '(') === false) {
@@ -278,7 +282,9 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                 $select = explode(',', $select);
             }
             foreach ($select as $k => $item) {
-                $select[$k] = $tableKey . '.' . $item;
+                if (strpos($item, '(') === false) {
+                    $select[$k] = $tableKey . '.' . $item;
+                }
             }
             $arr["select"] = array_merge($arr["select"], $select);
             return $arr;
@@ -330,12 +336,15 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * 函数的含义说明
      *
      * @access public
+     * @param mixed $table 要连接的表的对应类名
+     * @param mixed $select 连接后提取的数字
+     * @param mixed $aliasTableName 连接的表的别名
      * @since 1.0
      * @return $this
      */
-    public function leftJoin($table, $select = '*')
+    public function leftJoin($table, $select = '*', $aliasTableName = '')
     {
-        return $this->_join('left join', $table, $select);
+        return $this->_join('left join', $table, $select, $aliasTableName);
     }
 
     public function sqlAfter($addSql)
@@ -352,12 +361,15 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * 函数的含义说明
      *
      * @access public
+     * @param mixed $table 要连接的表的对应类名
+     * @param mixed $select 连接后提取的数字
+     * @param mixed $aliasTableName 连接的表的别名
      * @since 1.0
      * @return $this
      */
-    public function fullJoin($table, $select = '*')
+    public function fullJoin($table, $select = '*', $aliasTableName = '')
     {
-        return $this->_join('full join', $table, $select);
+        return $this->_join('full join', $table, $select, $aliasTableName);
     }
 
     /**
@@ -365,12 +377,15 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * 函数的含义说明
      *
      * @access public
+     * @param mixed $table 要连接的表的对应类名
+     * @param mixed $select 连接后提取的数字
+     * @param mixed $aliasTableName 连接的表的别名
      * @since 1.0
      * @return $this
      */
-    public function join($table, $select = '*')
+    public function join($table, $select = '*', $aliasTableName = '')
     {
-        return $this->_join('join', $table, $select);
+        return $this->_join('join', $table, $select, $aliasTableName);
     }
 
     private $limit_ = '';
