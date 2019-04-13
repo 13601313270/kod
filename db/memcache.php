@@ -58,21 +58,22 @@ class kod_db_memcache{
 		$lockValue2 = 'lock2';
 		for($i=0;$i<10;$i++){
 			$value = static::get($key);
-			if(in_array($value,array($lockValue,$lockValue2))){
+			if (in_array($value, array($lockValue, $lockValue2), true)) {
 				sleep(1);
 			}else{
 				break;
 			}
 		}
-		if($value==false || ($funcIsExpire!=='' && $value!==false && $funcIsExpire($value)==false)){
+		if($value===false || ($funcIsExpire!=='' && $value!==false && $funcIsExpire($value)==false)){
 			//进程
 			static::set($key,$lockValue,0,10);
 			$weatTime = 10000;//轮训时间1s
 			usleep(rand(1,$weatTime));
+
 			if(static::get($key)==$lockValue){
 				static::set($key,$lockValue2,0,10);
 				$data = $function();
-				if($data==null){
+				if($data===null){
 					static::delete($key);
 					return null;
 				}else{
