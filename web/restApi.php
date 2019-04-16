@@ -185,6 +185,7 @@ abstract class kod_web_restApi
                 exit;
             }
         });
+        return $this;
     }
 
     public function lastExit()

@@ -79,18 +79,17 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . $childSql[0] . ')';
                             $returnSlotData = array_merge($returnSlotData, $childSql[1]);
                         } else {
-                            if (array_keys(array_keys($item[2])) === array_keys($item[2])) {
-                                $temp = array();
-                                foreach ($item[2] as $enum) {
-                                    if (is_numeric($enum)) {
-                                        $temp[] = $enum;
-                                    } else {
-                                        $temp[] = '?';
-                                        $returnSlotData[] = $enum;
-                                    }
+                            $item[2] = array_values($item[2]);
+                            $temp = array();
+                            foreach ($item[2] as $enum) {
+                                if (is_numeric($enum)) {
+                                    $temp[] = $enum;
+                                } else {
+                                    $temp[] = '?';
+                                    $returnSlotData[] = $enum;
                                 }
-                                $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . implode(',', $temp) . ')';
                             }
+                            $returnSqlArr[] = $item[0] . ' ' . $item[1] . ' (' . implode(',', $temp) . ')';
                         }
                     }
                 } else {
@@ -507,7 +506,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             return $arr;
         });
         $data = $this->action();
-        return $data[0]['count'];
+        if (is_string($data[0])) {
+            return $data[0];
+        } else {
+            return $data[0]['count'];
+        }
     }
 
     public function getByKey($id)
