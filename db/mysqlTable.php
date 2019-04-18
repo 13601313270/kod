@@ -265,7 +265,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     protected function _join($joinType, $table, $select = '*', $aliasTableName = '')
     {
-        if ($aliasTableName === '') {
+        if (is_string($table)) {
+            $tableObj = explode(' ', $table);
+            $table = $tableObj[0];
+        }
+        if (is_string($table) && count($tableObj) > 2 && $tableObj[1] === 'as') {
+            $tableKey = $tableObj[2];
+        } else if ($aliasTableName === '') {
             $tableKey = 'table' . rand(10000, 90000);
         } else {
             $tableKey = $aliasTableName;
