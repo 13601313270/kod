@@ -263,7 +263,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this;
     }
 
-    protected function _join($joinType, $table, $select = '*', $aliasTableName = '')
+    protected function _join($joinType, $table, $select = '*', $linkArr = '')
     {
         if (is_string($table)) {
             $tableObj = explode(' ', $table);
@@ -271,10 +271,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         }
         if (is_string($table) && count($tableObj) > 2 && $tableObj[1] === 'as') {
             $tableKey = $tableObj[2];
-        } else if ($aliasTableName === '') {
-            $tableKey = 'table' . rand(10000, 90000);
         } else {
-            $tableKey = $aliasTableName;
+            $tableKey = 'table' . rand(10000, 90000);
         }
         $this->bind('select', function ($arr) use ($joinType, $select, $tableKey) {
             foreach ($arr["select"] as $k => $item) {
@@ -294,13 +292,19 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             $arr["select"] = array_merge($arr["select"], $select);
             return $arr;
         });
-        $this->bind('join', function ($data) use ($joinType, $table, $tableKey) {
+        $this->bind('join', function ($data) use ($joinType, $table, $tableKey, $linkArr) {
             if (gettype($table) === 'object' && $table instanceof kod_db_mysqlTable) {
                 $tableClone = clone $table;
                 // 为啥要clone？忘了！！
                 $class = get_class($tableClone);
-                $key = array_keys($this->joinList[$class])[0];
-                $key2 = array_values($this->joinList[$class])[0];
+                if (is_array($linkArr)) {
+                    $key = array_keys($linkArr)[0];
+                    $key2 = array_values($linkArr)[0];
+                } else {
+                    $key = array_keys($this->joinList[$class])[0];
+                    $key2 = array_values($this->joinList[$class])[0];
+                }
+
 
                 if ($this->dbName !== $tableClone->dbName) {
                     $tableClone->bind('select', function ($data) use ($tableClone) {
@@ -343,13 +347,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * @access public
      * @param mixed $table 要连接的表的对应类名
      * @param mixed $select 连接后提取的数字
-     * @param mixed $aliasTableName 连接的表的别名
+     * @param mixed $linkArr 连接的表的别名
      * @since 1.0
      * @return $this
      */
-    public function leftJoin($table, $select = '*', $aliasTableName = '')
+    public function leftJoin($table, $select = '*', $linkArr = '')
     {
-        return $this->_join('left join', $table, $select, $aliasTableName);
+        return $this->_join('left join', $table, $select, $linkArr);
     }
 
     public function sqlAfter($addSql)
@@ -368,13 +372,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * @access public
      * @param mixed $table 要连接的表的对应类名
      * @param mixed $select 连接后提取的数字
-     * @param mixed $aliasTableName 连接的表的别名
+     * @param mixed $linkArr 连接的表的别名
      * @since 1.0
      * @return $this
      */
-    public function fullJoin($table, $select = '*', $aliasTableName = '')
+    public function fullJoin($table, $select = '*', $linkArr = '')
     {
-        return $this->_join('full join', $table, $select, $aliasTableName);
+        return $this->_join('full join', $table, $select, $linkArr);
     }
 
     /**
@@ -384,13 +388,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * @access public
      * @param mixed $table 要连接的表的对应类名
      * @param mixed $select 连接后提取的数字
-     * @param mixed $aliasTableName 连接的表的别名
+     * @param mixed $linkArr 连接的表的别名
      * @since 1.0
      * @return $this
      */
-    public function join($table, $select = '*', $aliasTableName = '')
+    public function join($table, $select = '*', $linkArr = '')
     {
-        return $this->_join('join', $table, $select, $aliasTableName);
+        return $this->_join('join', $table, $select, $linkArr);
     }
 
     private $limit_ = '';
