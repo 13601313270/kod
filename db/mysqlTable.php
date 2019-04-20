@@ -61,11 +61,16 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         if ($arr && $arr[$mergeType]) {
             foreach ($arr[$mergeType] as $item) {
                 if (array_keys(array_keys($item)) === array_keys($item)) {
-                    if (in_array($item[1], ['=', '>', '<', '!=', '>=', '<='])) {
-                        if (is_numeric($item[2])) {
-                            $returnSqlArr[] = $item[0] . $item[1] . $item[2];
+                    if (in_array($item[1], ['=', '>', '<', '!=', '>=', '<=', 'like'])) {
+                        if ($item[1] === 'like') {
+                            $action = ' ' . $item[1] . ' ';
                         } else {
-                            $returnSqlArr[] = $item[0] . $item[1] . '?';
+                            $action = $item[1];
+                        }
+                        if (is_numeric($item[2])) {
+                            $returnSqlArr[] = $item[0] . $action . $item[2];
+                        } else {
+                            $returnSqlArr[] = $item[0] . $action . '?';
                             $returnSlotData[] = $item[2];
                         }
                     } elseif ($item[1] === 'in') {
@@ -177,7 +182,10 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     'and' => array()
                 );
                 foreach ($arr as $k => $v) {
-                    if (in_array(substr($k, -2), array('>=', '<=', '<>'))) {
+                    $list = explode(' ', $k);
+                    if (in_array($list[1], array('like'))) {
+                        $whereParams['and'][] = [$list[0], $list[1], $v];
+                    } else if (in_array(substr($k, -2), array('>=', '<=', '<>'))) {
                         $whereParams['and'][] = [substr($k, 0, -2), substr($k, -2), $v];
                     } else if (in_array(substr($k, -1), array('>', '<'))) {
                         $whereParams['and'][] = [substr($k, 0, -1), substr($k, -1), $v];
