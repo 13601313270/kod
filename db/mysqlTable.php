@@ -170,6 +170,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         $this->bind('select', function ($data) use ($arr) {
             if (is_string($arr)) {
                 $whereParams = $arr;
+            } else if ($arr['and'] || $arr['or']) {
+                $whereParams = $arr;
             } else if (array_keys($arr) === range(0, count($arr) - 1)) {
                 $whereParams = array(
                     'and' => array()

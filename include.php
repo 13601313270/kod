@@ -74,6 +74,7 @@ if(KOD_MEMCACHE_OPEN){
 
 date_default_timezone_set('PRC');
 
+require KOD_DIR_NAME.'/db/mysqlTableWhere.php';
 spl_autoload_register(function($model){
 	if(strpos($model,'kod_')===0){
 		if(!include_once(dirname(KOD_DIR_NAME).KOD_DS.str_replace('_', KOD_DS,$model).'.php')){
