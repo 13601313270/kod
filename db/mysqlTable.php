@@ -467,6 +467,15 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         });
         return $this;
     }
+    public function echoSql()
+    {
+        $this->bind('afterSql', function ($sql) {
+            $this->breakAll();
+            print_r($sql);exit;
+            return $sql;
+        });
+        return $this;
+    }
 
     public function select($list)
     {
