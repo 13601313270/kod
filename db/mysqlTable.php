@@ -333,9 +333,10 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             } else {
                 $tableObj = new $table();
                 $joinTableName = $tableObj->getTableName();
-                if ($this->dbName !== $tableObj->dbName) {
+                // 不能只是判断调用者是否一样，因为存在 c.a join (b.a join b.b)，这时候内部的join是同一个库，但是因为外层库不一样，所以必须加上库名
+//                if ($this->dbName !== $tableObj->dbName) {
                     $joinTableName = $tableObj->dbName . '.' . $joinTableName;
-                }
+//                }
                 $class = $table;
                 if (!isset($this->joinList[$class])) {
                     throw new Exception('类【' . get_called_class() . '】的joinList中没有【' . $class . '】类的配置');
@@ -467,11 +468,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         });
         return $this;
     }
+
     public function echoSql()
     {
         $this->bind('afterSql', function ($sql) {
             $this->breakAll();
-            print_r($sql);exit;
+            print_r($sql);
+            exit;
             return $sql;
         });
         return $this;
