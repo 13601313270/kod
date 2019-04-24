@@ -127,6 +127,7 @@ abstract class kod_web_restApi
         self::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
                 $data = json_decode(file_get_contents("php://input"), true);
+                $data = array_merge($_GET, $data);//后面盖住前面
                 if (is_array($where)) {
                     if (count($where) > 0) {
                         foreach ($where as $k => $v) {

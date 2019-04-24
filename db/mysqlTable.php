@@ -578,7 +578,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             "insert into " . $this->getTableName() . " (" . implode(",", array_keys($params)) . ") VALUES(:" . implode(",:", array_keys($params)) . ")",
             $params
         );
-        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->sql($sql[0], $sql[1]);
+        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->lastInsertId()->sql($sql[0], $sql[1]);
     }
 
     public function update($where, $params)
@@ -619,7 +619,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             $lastCreateWhereStr = implode(' and ', $paramsTemp2);
         }
         $sql .= " where " . $lastCreateWhereStr;
-        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->sql($sql, $excuteArr);
+        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, $excuteArr);
     }
 }
 

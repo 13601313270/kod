@@ -72,6 +72,22 @@ final class kod_db_mysqlDB
         return $sth->execute();
     }
 
+    private $isLastInsertId = false;
+
+    public function lastInsertId()
+    {
+        $this->isLastInsertId = true;
+        return $this;
+    }
+
+    private $isRowCount = false;
+
+    public function rowCount()
+    {
+        $this->isRowCount = true;
+        return $this;
+    }
+
     public function sql($sql, $data = array())
     {
         $con = $this->getConnect();
@@ -82,8 +98,15 @@ final class kod_db_mysqlDB
         if ($sth !== false) {
             $sth->setFetchMode(PDO::FETCH_ASSOC);
             $sth->execute($data);
-            return $sth->fetchAll();
+            if ($this->isLastInsertId) {
+                return $con->lastInsertId();
+            } elseif ($this->isRowCount) {
+                return $sth->rowCount();
+            } else {
+                return $sth->fetchAll();
+            }
         } else {
+            print_r($con->errorInfo());
             throw new Exception('sql报错' . $sql);
         }
 
