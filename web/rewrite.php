@@ -28,11 +28,10 @@ final class kod_web_rewrite extends kod_tool_config
             // 删除最后的换行
             $oneLine = preg_replace('/\n$/', "", $oneLine);
             // 计算锁进长度
-            $oneLine = preg_replace('/^    /', "\t", $oneLine);
-
+            $oneLine = preg_replace('/    /', "\t", $oneLine);
             // 计算锁进位数
             $isHasTab = preg_match('/^\t+/', $oneLine, $match);
-            $oneLine = preg_replace('/^\t/', "", $oneLine);
+            $oneLine = preg_replace('/^\t+/', "", $oneLine);
             $oneLine = preg_replace('/\s+/', " ", $oneLine);
 
             $oneArr = explode(" ", $oneLine);
