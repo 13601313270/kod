@@ -80,6 +80,31 @@ abstract class kod_web_restApi
         return self::getInstance();
     }
 
+    public static function delete($where = array())
+    {
+        self::getinstance()->newCheck(function () use ($where) {
+            if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+                $data = json_decode(file_get_contents("php://input"), true);
+                $data = array_merge($_GET, $data);
+                if ($data === null) {
+                    $data = array();
+                }
+                $data = array_merge($data, $_GET);
+                if (count($where) > 0) {
+                    foreach ($where as $k => $v) {
+                        if ($data[$k] !== $v) {
+                            return false;
+                        }
+                    }
+                }
+                return $data;
+            } else {
+                return false;
+            }
+        });
+        return self::getinstance();
+    }
+
     /**
      * get
      * 截获get请求
