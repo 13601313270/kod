@@ -207,8 +207,7 @@ abstract class kod_web_restApi
                 }
             }
             if (is_callable($callback)) {
-                echo json_encode(call_user_func_array($callback, $args));
-                exit;
+                return call_user_func_array($callback, $args);
             }
         });
         return $this;
@@ -222,6 +221,16 @@ abstract class kod_web_restApi
                 $params = $step($params);
                 if ($params === false) {
                     break;
+                }
+            }
+            if ($params === false) {
+                continue;
+            } else {
+                if (is_array($params)) {
+                    echo json_encode($params);
+                    exit;
+                } else {
+                    echo $params;
                 }
             }
         }
