@@ -74,13 +74,14 @@ if(KOD_MEMCACHE_OPEN){
 
 date_default_timezone_set('PRC');
 
-require KOD_DIR_NAME.'/db/mysqlTableWhere.php';
-spl_autoload_register(function($model){
-	if(strpos($model,'kod_')===0){
-		if(!include_once(dirname(KOD_DIR_NAME).KOD_DS.str_replace('_', KOD_DS,$model).'.php')){
-			throw new Exception('类【'.$model.'】不存在，KOD自动加载机制尝试加载'.dirname(KOD_DIR_NAME).KOD_DS.str_replace('_',KOD_DS,$model).'.php发现文件不存在。');
-		}
-	}
+require KOD_DIR_NAME . '/db/mysqlTableWhere.php';
+spl_autoload_register(function ($model) {
+    if (strpos($model, 'kod_') === 0) {
+        $file = KOD_DIR_NAME . KOD_DS . preg_replace('/^kod\//', '', str_replace('_', KOD_DS, $model)) . '.php';
+        if (!include_once($file)) {
+            throw new Exception('类【' . $model . '】不存在，KOD自动加载机制尝试加载' . $file . '发现文件不存在。');
+        }
+    }
 });
 
 if(function_exists('kod_ControlAutoLoad')){
