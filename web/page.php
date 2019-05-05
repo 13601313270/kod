@@ -163,7 +163,7 @@ class kod_web_page extends stdClass{
 
 
 		$smartyObject->setCompileDir(KOD_SMARTY_COMPILR_DIR);//设置编译目录
-		//$smartyObject->template_dir = KOD_DIR_NAME."/testRun/";//设置模板目录
+		$smartyObject->template_dir = KOD_SMARTY_TEMPLATE_DIR;//设置模板目录
 		//$smartyObject->config_dir = "smarty/templates/config";//目录变量
 //		$smartyObject->setCacheDir("smarty/templates/cache"); //缓存文件夹
 

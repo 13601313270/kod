@@ -174,6 +174,13 @@ abstract class kod_web_restApi
         return self::getInstance();
     }
 
+    /**
+     * run
+     * 处理收操的请求
+     *
+     * @access public
+     * @return $this
+     */
     public function run(Closure $callback)
     {
         $this->step(function ($params) use ($callback) {
@@ -196,7 +203,7 @@ abstract class kod_web_restApi
                     } elseif (!is_array($params[$name])) { //参数不是数组类型　如 name = lemon
                         $args[] = $params[$name];
                     } else {
-                        throw new Exception('error');
+                        throw new Exception("error:需要指定闭包函数的参数{$name}的数据类型");
                     }
                     unset($params[$name]);
                 } elseif ($param->isDefaultValueAvailable()) {  //没有传参数，　检测时候参数有默认值
@@ -209,6 +216,26 @@ abstract class kod_web_restApi
             if (is_callable($callback)) {
                 return call_user_func_array($callback, $args);
             }
+        });
+        return $this;
+    }
+
+    /**
+     * fetch
+     * 使用模版引擎渲染
+     *
+     * @access public
+     * @return $this
+     */
+    public function fetch($tpl)
+    {
+        $this->step(function ($datas) use ($tpl) {
+            //创建一个网页对象
+            $page = new kod_web_page();
+            foreach ($datas as $k => $v) {
+                $page->$k = $v;
+            }
+            $page->fetch($tpl);
         });
         return $this;
     }
@@ -231,6 +258,7 @@ abstract class kod_web_restApi
                     exit;
                 } else {
                     echo $params;
+                    exit;
                 }
             }
         }
