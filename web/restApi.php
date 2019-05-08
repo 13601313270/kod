@@ -151,8 +151,21 @@ abstract class kod_web_restApi
     {
         self::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-                $data = json_decode(file_get_contents("php://input"), true);
-                $data = array_merge($_GET, $data);//后面盖住前面
+                if (strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') > -1) {
+                    $temp = explode('--------------------------', $_SERVER['CONTENT_TYPE']);
+                    $temp = explode('----------------------------' . $temp[1], file_get_contents("php://input"));
+                    $temp = array_slice($temp, 1, count($temp) - 2);
+                    $data = array();
+                    foreach ($temp as $item) {
+                        preg_match("/Content-Disposition: form-data; name=\"(\S+)\"\s+([\S|\s]+)\s/", $item, $match);
+                        $data[$match[1]] = $match[2];
+                    }
+                } else {
+                    $data = json_decode(file_get_contents("php://input"), true);
+                }
+                if (!empty($data)) {
+                    $data = array_merge($_GET, $data);//后面盖住前面
+                }
                 if (is_array($where)) {
                     if (count($where) > 0) {
                         foreach ($where as $k => $v) {
