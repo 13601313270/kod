@@ -163,9 +163,10 @@ abstract class kod_web_restApi
                 } else {
                     $data = json_decode(file_get_contents("php://input"), true);
                 }
-                if (!empty($data)) {
-                    $data = array_merge($_GET, $data);//后面盖住前面
+                if (empty($data)) {
+                    $data = array();
                 }
+                $data = array_merge($_GET, $data);//后面盖住前面
                 if (is_array($where)) {
                     if (count($where) > 0) {
                         foreach ($where as $k => $v) {
