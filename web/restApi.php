@@ -160,6 +160,8 @@ abstract class kod_web_restApi
                         preg_match("/Content-Disposition: form-data; name=\"(\S+)\"\s+([\S|\s]+)\s/", $item, $match);
                         $data[$match[1]] = $match[2];
                     }
+                } else if ($_SERVER['CONTENT_TYPE'] === 'application/x-www-form-urlencoded') {
+                    parse_str(file_get_contents("php://input"), $data);
                 } else {
                     $data = json_decode(file_get_contents("php://input"), true);
                 }
