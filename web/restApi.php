@@ -80,6 +80,14 @@ abstract class kod_web_restApi
         return self::getInstance();
     }
 
+    /**
+     * delete
+     * 截获delete请求
+     *
+     * @access public
+     * @since 1.0
+     * @return $this
+     */
     public static function delete($where = array())
     {
         self::getinstance()->newCheck(function () use ($where) {
