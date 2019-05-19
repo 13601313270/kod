@@ -53,6 +53,7 @@ abstract class kod_web_restApi
     {
         self::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $_POST = array_merge($_POST, $_GET);//后面盖住前面
                 if (empty($_POST)) {
                     $data = json_decode(file_get_contents("php://input"), true);
                     if (!empty($data)) {
