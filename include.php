@@ -36,6 +36,10 @@ if(!defined('KOD_SQL_MODE')){
 	define('KOD_SQL_MODE','ANSI');
 }
 
+define('KOD_MEMCACHE_TYPE_MEMCACHE', 1);
+define('KOD_MEMCACHE_TYPE_MEMCACHED', 2);
+
+
 //smarty框架预编译存储路径
 if(!defined('KOD_SMARTY_COMPILR_DIR')){
 	define('KOD_SMARTY_COMPILR_DIR','/var/www/smarty_cache');
