@@ -240,7 +240,6 @@ $metaApi->codeMeta['child'][] = array(
         )
     ]
 );
-echo $metaApi->getCode();
 file_put_contents('../../include.php', $metaApi->getCode());
 //输出hello World的代码的结构，可以理解为下面的复合数组形式
 $metaApi->codeMeta = array(
@@ -728,6 +727,36 @@ $metaApi->codeMeta = array(
         )
     ),
 );
-echo $metaApi->getCode();
 file_put_contents('../../index.php', $metaApi->getCode());
+
+
+file_put_contents('../../rewrite.conf', '/ /index.php');
+mkdir('../../app');
+$metaApi->codeMeta = array(
+    'type' => 'window',
+    'child' => array(
+        D('phpBegin'),
+        array(
+            'type' => 'objectFunction',
+            'object' => array(
+                'type' => 'staticFunction',
+                'object' => 'restApi',
+                'name' => 'get'
+            ),
+            'name' => 'run',
+            'property' => [array(
+                'type' => 'function',
+                'child' => [
+                    array(
+                        'type' => 'return',
+                        'value' => Mstring("hello kod's world", '"')
+
+
+                    )
+                ]
+            )]
+        )
+    )
+);
+file_put_contents('../../app/index.php', $metaApi->getCode());
 exit;
