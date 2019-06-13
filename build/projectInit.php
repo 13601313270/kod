@@ -146,6 +146,23 @@ foreach ($define as $k => $item) {
         )
     );
 }
+
+$metaApi->codeMeta['child'][] = array(
+    'type' => 'functionCall',
+    'name' => 'include_once',
+    'property' => [array(
+        'type' => '.',
+        'object1' => array(
+            'type' => 'functionCall',
+            'name' => 'dirname',
+            'property' => array(
+                D('__FILE__')
+            )
+        ),
+        'object2' => Mstring('/kod/include.php'),
+    )]
+);
+
 $metaApi->codeMeta['child'][] = array(
     'type' => 'function',
     'name' => 'kod_ControlAutoLoad',
@@ -285,7 +302,7 @@ $metaApi->codeMeta = array(
                         'property' => array(
                             array(
                                 'type' => 'functionCall',
-                                'name' => 'dirname',
+                                'name' => 'explode',
                                 'property' => array(
                                     D('string', '?'),
                                     array(
@@ -348,9 +365,10 @@ $metaApi->codeMeta = array(
             'value' => array(
                 'type' => 'functionCall',
                 'name' => 'empty',
-                'property' => array(
-                    D('variable', '$result')
-                ),
+                'property' => [array(
+                    'type' => '!',
+                    'value' => D('variable', '$result')
+                )],
             ),
             'child' => array(
                 array(
@@ -739,24 +757,62 @@ $metaApi->codeMeta = array(
         array(
             'type' => 'objectFunction',
             'object' => array(
-                'type' => 'staticFunction',
-                'object' => 'restApi',
-                'name' => 'get'
+                'type' => 'objectFunction',
+                'object' => array(
+                    'type' => 'staticFunction',
+                    'object' => 'restApi',
+                    'name' => 'get'
+                ),
+                'name' => 'run',
+                'property' => [array(
+                    'type' => 'function',
+                    'child' => [
+                        array(
+                            'type' => 'return',
+                            'value' => array(
+                                'type' => 'array',
+                                'child' => [
+                                    array(
+                                        'type' => 'arrayValue',
+                                        'key' => Mstring('title'),
+                                        'value' => Mstring("hello kod's world")
+                                    ),
+                                    array(
+                                        'type' => 'arrayValue',
+                                        'key' => Mstring('content'),
+                                        'value' => Mstring("welcome to hear")
+                                    ),
+                                ]
+                            )
+                        )
+                    ]
+                )]
             ),
-            'name' => 'run',
-            'property' => [array(
-                'type' => 'function',
-                'child' => [
-                    array(
-                        'type' => 'return',
-                        'value' => Mstring("hello kod's world", '"')
-
-
-                    )
-                ]
-            )]
+            'name' => 'fetch',
+            'property' => [Mstring('index.tpl')]
         )
     )
 );
 file_put_contents('../../app/index.php', $metaApi->getCode());
+file_put_contents('../../app/index.tpl', '<html>
+    <body>
+    <h1>{{$title}}</h1>
+    <p>{{$content}}</p>
+    </body>
+</html>');
+mkdir('../../include');
+
+$metaApi->codeMeta = array(
+    'type' => 'window',
+    'child' => array(
+        D('phpBegin'),
+        array('type' => 'comment', 'value' => '用来添加路由的中间件'),
+        array(
+            'type' => 'class',
+            'name' => 'restApi',
+            'extends' => 'kod_web_restApi'
+        )
+    )
+);
+file_put_contents('../../include/restApi.php', $metaApi->getCode());
 exit;

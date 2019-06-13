@@ -257,8 +257,10 @@ abstract class kod_web_restApi
         $this->step(function ($datas) use ($tpl) {
             //创建一个网页对象
             $page = new kod_web_page();
-            foreach ($datas as $k => $v) {
-                $page->$k = $v;
+            if(is_array($datas)){
+                foreach ($datas as $k => $v) {
+                    $page->$k = $v;
+                }
             }
             $page->fetch($tpl);
         });
