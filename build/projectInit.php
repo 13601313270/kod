@@ -320,23 +320,17 @@ $metaApi->codeMeta = array(
         array(
             'type' => 'functionCall',
             'name' => 'header',
-            'property' => array(
-                D('string', 'Access-Control-Allow-Origin: *')
-            )
+            'property' => [D('string', 'Access-Control-Allow-Origin: *')]
         ),
         array(
             'type' => 'functionCall',
             'name' => 'header',
-            'property' => array(
-                D('string', 'Access-Control-Allow-Credentials:true')
-            )
+            'property' => [D('string', 'Access-Control-Allow-Credentials:true')]
         ),
         array(
             'type' => 'functionCall',
             'name' => 'header',
-            'property' => array(
-                D('string', 'Access-Control-Allow-Methods:OPTIONS, GET, POST, PUT, DELETE')
-            )
+            'property' => [D('string', 'Access-Control-Allow-Methods:OPTIONS, GET, POST, PUT, DELETE')]
         ),
         array(
             'type' => 'if',
@@ -405,10 +399,7 @@ $metaApi->codeMeta = array(
                     'object2' => array(
                         'type' => 'functionCall',
                         'name' => 'array_merge',
-                        'property' => array(
-                            D('variable', '$_GET'),
-                            D('variable', '$myArray')
-                        )
+                        'property' => [D('variable', '$_GET'), D('variable', '$myArray')]
                     ),
                 ),
                 array(
@@ -471,7 +462,6 @@ $metaApi->codeMeta = array(
                         ),
                     ),
                     'child' => array(
-                        //$_SERVER["REQUEST_URI"] = $new["path"] . "?" . $new["query"];
                         array(
                             'type' => '=',
                             'object1' => array(
@@ -556,16 +546,12 @@ $metaApi->codeMeta = array(
                 array(
                     'type' => 'functionCall',
                     'name' => 'unset',
-                    'property' => array(
-                        D('variable', '$new')
-                    )
+                    'property' => [D('variable', '$new')]
                 ),
                 array(
                     'type' => 'functionCall',
                     'name' => 'chdir',
-                    'property' => array(
-                        D('string', './app/')
-                    )
+                    'property' => [D('string', './app/')]
                 ),
                 array(
                     'type' => 'if',
@@ -717,9 +703,7 @@ $metaApi->codeMeta = array(
                 array(
                     'type' => 'functionCall',
                     'name' => 'unset',
-                    'property' => array(
-                        D('variable', '$result')
-                    )
+                    'property' => [D('variable', '$result')]
                 ),
             )
         ),
@@ -729,16 +713,12 @@ $metaApi->codeMeta = array(
                 array(
                     'type' => 'functionCall',
                     'name' => 'header',
-                    'property' => array(
-                        D('string', 'HTTP/1.1 404 Not Found')
-                    ),
+                    'property' => [D('string', 'HTTP/1.1 404 Not Found')],
                 ),
                 array(
                     'type' => 'functionCall',
                     'name' => 'echo',
-                    'property' => array(
-                        D('string', '404')
-                    ),
+                    'property' => [D('string', '404')],
                 ),
                 D('exit')
             )
