@@ -621,6 +621,14 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         $sql .= " where " . $lastCreateWhereStr;
         return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, $excuteArr);
     }
+
+    public function deleteById($id)
+    {
+        $sql = "delete from " . $this->getTableName() . " where " . $this->key . "=?";
+        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, [$id]);
+
+        return $stmt->execute(array($id));
+    }
 }
 
 /*
