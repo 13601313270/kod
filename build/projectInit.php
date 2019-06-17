@@ -339,7 +339,7 @@ $metaApi->codeMeta = array(
                 'object1' => array(
                     'type' => 'arrayGet',
                     'object' => D('variable', '$_SERVER'),
-                    'key' => D('string', 'REQUEST_URI')
+                    'key' => D('string', 'REQUEST_METHOD')
                 ),
                 'object2' => D('string', 'OPTIONS')
             ),
