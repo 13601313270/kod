@@ -36,6 +36,9 @@ final class kod_web_rewrite extends kod_tool_config
             $oneLine = preg_replace('/\s+/', " ", $oneLine);
 
             $oneArr = explode(" ", $oneLine);
+            if (empty(trim(end($oneArr)))) {
+                array_pop($oneArr);
+            }
             if (count($oneArr) == 0) {
                 continue;
             } else {
