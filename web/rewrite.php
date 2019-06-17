@@ -26,6 +26,7 @@ final class kod_web_rewrite extends kod_tool_config
                 continue;
             }
             // 删除最后的换行
+            $oneLine = preg_replace('/\r\n$/', "", $oneLine);
             $oneLine = preg_replace('/\n$/', "", $oneLine);
             // 计算锁进长度
             $oneLine = preg_replace('/    /', "\t", $oneLine);
