@@ -335,7 +335,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                 $joinTableName = $tableObj->getTableName();
                 // 不能只是判断调用者是否一样，因为存在 c.a join (b.a join b.b)，这时候内部的join是同一个库，但是因为外层库不一样，所以必须加上库名
 //                if ($this->dbName !== $tableObj->dbName) {
-                    $joinTableName = $tableObj->dbName . '.' . $joinTableName;
+                $joinTableName = $tableObj->dbName . '.' . $joinTableName;
 //                }
                 $class = $table;
                 if (!isset($this->joinList[$class])) {
@@ -628,6 +628,17 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, [$id]);
 
         return $stmt->execute(array($id));
+    }
+
+    final function delete()
+    {
+        $this->bind('select', function ($step) {
+            $where = $this->getWhereStr($step['where']);
+            $sql = "delete from " . $step['from'] . " where " . $where[0];
+            $this->breakAll();
+            return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, $where[1]);
+        });
+        $this->action();
     }
 }
 
