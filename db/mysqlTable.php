@@ -185,7 +185,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                 );
                 foreach ($arr as $k => $v) {
                     $list = explode(' ', $k);
-                    if (in_array($list[1], array('like'))) {
+                    if (in_array($list[1], array('like', 'in'))) {
                         $whereParams['and'][] = [$list[0], $list[1], $v];
                     } else if (in_array(substr($k, -2), array('>=', '<=', '<>'))) {
                         $whereParams['and'][] = [substr($k, 0, -2), substr($k, -2), $v];
@@ -477,7 +477,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             exit;
             return $sql;
         });
-        return $this;
+        return $this->action();
     }
 
     public function select($list)
@@ -552,6 +552,23 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             $key => $id
         ));
         return ($this->action())[0];
+    }
+
+    public function getByKeys($keys, $isObject = true)
+    {
+        $key = $this->tableName . '.' . $this->key . ' in';
+        $this->where(array(
+            $key => $keys
+        ));
+        $result = array();
+        if ($isObject) {
+            foreach ($this->action() as $val) {
+                $result[$val[$this->key]] = $val;
+            }
+            return $result;
+        } else {
+            return $this->action();
+        }
     }
 
     public function insert($params, $mysql_insert_id = true)

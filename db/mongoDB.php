@@ -55,11 +55,12 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
                 foreach ($step['select'] as $v) {
                     $step['options']['projection'][$v] = true;
                 }
-//                print_r($step['sort']);
-                $step['options']['sort'] = array(
-                    $step['sort'] => -1
-                );
             }
+
+            if(!empty($step['sort'])){
+                $step['options']['sort'] = $step['sort'];
+            }
+
             if (in_array('count(*)', $step['select'])) {
                 $command = new MongoDB\Driver\Command(array(
                     'count' => $this->tableName,
@@ -127,10 +128,12 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
         return $this;
     }
 
-    public function sort($type)
+    public function sort($type, $sortType = -1)
     {
-        $this->bind('where', function ($data) use ($type) {
-            $data['sort'] = $type;
+        $this->bind('where', function ($data) use ($type, $sortType) {
+            $data['sort'] = array(
+                $type => $sortType
+            );
             return $data;
         });
         return $this;
@@ -153,6 +156,24 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
     public function get()
     {
         return $this->action();
+    }
+
+    public function first($column = '')
+    {
+        if ($column) {
+            $this->select($column);
+        }
+        $returnData = $this->action();
+        $data = current($returnData);
+        if ($column) {
+            if (preg_match('/ as (.*)/', $column, $match)) {
+                return $data[$match[1]];
+            } else {
+                return $data[$column];
+            }
+        } else {
+            return $data;
+        }
     }
 
     public function getByKey($id)
