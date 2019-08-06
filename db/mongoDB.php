@@ -79,9 +79,9 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
         });
         $this->bind('modified', function ($data) {
             if (is_array($data)) {
-                foreach ($data as $k => $v) {
-                    if (is_array($v) && $v['_id'] && $v['_id']['oid']) {
-                        $data[$k]['_id'] = $v['_id']['oid'];
+                foreach ($data as $k => $single) {
+                    if (is_array($single) && $single['_id'] && $single['_id']['oid']) {
+                        $data[$k]['_id'] = $single['_id']['oid'];
                     }
                 }
             }
