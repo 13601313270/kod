@@ -640,7 +640,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             $this->breakAll();
             return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, array_merge($excuteArr, $where[1]));
         });
-        $this->action();
+        return $this->action();
     }
 
     public function deleteById($id)
