@@ -53,13 +53,13 @@ abstract class kod_web_restApi
     {
         self::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $_POST = array_merge($_POST, $_GET);//后面盖住前面
                 if (empty($_POST)) {
                     $data = json_decode(file_get_contents("php://input"), true);
                     if (!empty($data)) {
                         $_POST = $data;
                     }
                 }
+                $_POST = array_merge($_POST, $_GET);//后面盖住前面
                 if (is_array($where)) {
                     if (count($where) > 0) {
                         foreach ($where as $k => $v) {
@@ -228,6 +228,7 @@ abstract class kod_web_restApi
                     } elseif (!is_array($params[$name])) { //参数不是数组类型　如 name = lemon
                         $args[] = $params[$name];
                     } else {
+                        kod_web_httpError::set(400, "error:需要指定闭包函数的参数{$name}的数据类型");
                         throw new Exception("error:需要指定闭包函数的参数{$name}的数据类型");
                     }
                     unset($params[$name]);
