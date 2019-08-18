@@ -638,7 +638,6 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             $where = $this->getWhereStr($step['where']);
             $sql .= " where " . $where[0];
             $this->breakAll();
-            print_r($sql, array_merge($excuteArr, $where[1]));exit;
             return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, array_merge($excuteArr, $where[1]));
         });
         $this->action();
