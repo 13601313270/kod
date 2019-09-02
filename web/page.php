@@ -12,6 +12,8 @@ class kod_web_page extends stdClass{
 		$this->beforeRun();
 	}
 
+    protected $smartyPlutPath = KOD_SMARTY_PLUT_PATH;//自定义smarty插件目录
+
 	public function beforeRun(){
 	}
 	public function beforeFetch(){
@@ -152,18 +154,16 @@ class kod_web_page extends stdClass{
 //		$smartyObject = new Smarty();
 
 //		$smartyObject->caching = true;
-//		if(count($this->smartyPlutPath)>=1){
-//			foreach($this->smartyPlutPath as $k=>$v){
-//				$smartyObject->addPluginsDir($v);
-//			}
-//		}
+		if (!empty($this->smartyPlutPath)) {
+			$smartyObject->addPluginsDir($this->smartyPlutPath);
+		}
 		$smartyObject->registerFilter('pre',array($this,'machiningTemplate'));
 		$smartyObject->registerFilter('post',array($this,'machiningPHP'));
 		$smartyObject->registerFilter('output',array($this,'machiningHtml'));
 
 
 		$smartyObject->setCompileDir(KOD_SMARTY_COMPILR_DIR);//设置编译目录
-		$smartyObject->template_dir = KOD_SMARTY_TEMPLATE_DIR;//设置模板目录
+//		$smartyObject->template_dir = webDIR;//设置模板目录
 		//$smartyObject->config_dir = "smarty/templates/config";//目录变量
 //		$smartyObject->setCacheDir("smarty/templates/cache"); //缓存文件夹
 

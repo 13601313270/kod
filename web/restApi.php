@@ -228,6 +228,7 @@ abstract class kod_web_restApi
                     } elseif (!is_array($params[$name])) { //参数不是数组类型　如 name = lemon
                         $args[] = $params[$name];
                     } else {
+                        kod_web_httpError::set(400, "error:需要指定闭包函数的参数{$name}的数据类型");
                         throw new Exception("error:需要指定闭包函数的参数{$name}的数据类型");
                     }
                     unset($params[$name]);

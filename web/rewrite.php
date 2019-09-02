@@ -44,6 +44,7 @@ final class kod_web_rewrite extends kod_tool_config
             } else {
                 if (count($oneArr) == 1) {// 是目录
                     if ($isHasTab) {
+                        $before = array_slice($before, 0, strlen($match[0]));
                         $before[] = $oneArr[0];
                     } else {
                         $before = array($oneArr[0]);
