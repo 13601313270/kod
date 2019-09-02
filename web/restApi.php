@@ -53,13 +53,13 @@ abstract class kod_web_restApi
     {
         self::getInstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $_POST = array_merge($_POST, $_GET);//后面盖住前面
                 if (empty($_POST)) {
                     $data = json_decode(file_get_contents("php://input"), true);
                     if (!empty($data)) {
                         $_POST = $data;
                     }
                 }
+                $_POST = array_merge($_POST, $_GET);//后面盖住前面
                 if (is_array($where)) {
                     if (count($where) > 0) {
                         foreach ($where as $k => $v) {
@@ -239,7 +239,8 @@ abstract class kod_web_restApi
                 }
             }
             if (is_callable($callback)) {
-                return call_user_func_array($callback, $args);
+                $bindCallback = Closure::bind($callback, $this);
+                return call_user_func_array($bindCallback, $args);
             }
         });
         return $this;
@@ -257,7 +258,7 @@ abstract class kod_web_restApi
         $this->step(function ($datas) use ($tpl) {
             //创建一个网页对象
             $page = new kod_web_page();
-            if(is_array($datas)){
+            if (is_array($datas)) {
                 foreach ($datas as $k => $v) {
                     $page->$k = $v;
                 }
