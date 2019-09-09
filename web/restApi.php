@@ -240,7 +240,8 @@ abstract class kod_web_restApi
                 }
             }
             if (is_callable($callback)) {
-                return call_user_func_array($callback, $args);
+                $bindCallback = Closure::bind($callback, $this);
+                return call_user_func_array($bindCallback, $args);
             }
         });
         return $this;
@@ -258,7 +259,7 @@ abstract class kod_web_restApi
         $this->step(function ($datas) use ($tpl) {
             //创建一个网页对象
             $page = new kod_web_page();
-            if(is_array($datas)){
+            if (is_array($datas)) {
                 foreach ($datas as $k => $v) {
                     $page->$k = $v;
                 }
