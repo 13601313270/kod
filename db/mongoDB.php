@@ -280,4 +280,25 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
         $result = $manager->executeBulkWrite($this->dbName . '.' . $this->tableName, $bulk);
         return $result->getDeletedCount();
     }
+
+    final function delete()
+    {
+        $this->bind('where', function ($step) {
+            if (!empty($step['filter'])) {
+                $manager = new MongoDB\Driver\Manager("mongodb://" . $this->dbWriteUser . ":" . $this->dbWritePass . "@" . KOD_MONGODB_HOST);
+                $bulk = new MongoDB\Driver\BulkWrite();
+                $bulk->delete($step['filter']);
+                $result = $manager->executeBulkWrite($this->dbName . '.' . $this->tableName, $bulk);
+                try {
+                    $this->breakAll();
+                    return $result->getDeletedCount();
+                } catch (MongoDB\Driver\Exception\BulkWriteException $e) {
+                    var_dump($e->getWriteResult()->getWriteErrors());
+                }
+            } else {
+                throw new Exception('正在尝试删除所有数据');
+            }
+        });
+        return $this->action();
+    }
 }
