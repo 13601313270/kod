@@ -514,9 +514,17 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         }
     }
 
-    public function get()
+    public function get(Closure $mapFunction = null)
     {
-        return $this->action();
+        $data = $this->action();
+        if ($mapFunction === null) {
+            return $data;
+        } else {
+            foreach ($data as $k => $item) {
+                $data[$k] = $mapFunction($item);
+            }
+            return $data;
+        }
     }
 
     public function getList($params)
