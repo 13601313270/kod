@@ -49,7 +49,7 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
         });
         $this->bind('data', function ($step) {
 //            print_r($step);
-            $manager = new MongoDB\Driver\Manager("mongodb://" . $this->dbWriteUser . ":" . $this->dbWritePass . "@dds-2zef5960fed0f8f41813-pub.mongodb.rds.aliyuncs.com:3717,dds-2zef5960fed0f8f42943-pub.mongodb.rds.aliyuncs.com:3717/admin?replicaSet=mgset-5320935");
+            $manager = new MongoDB\Driver\Manager("mongodb://" . $this->dbWriteUser . ":" . $this->dbWritePass . "@" . KOD_MONGODB_HOST);
             if (count($step['select']) > 0) {
                 $step['options']['projection'] = [];
                 foreach ($step['select'] as $v) {
@@ -57,7 +57,7 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
                 }
             }
 
-            if(!empty($step['sort'])){
+            if (!empty($step['sort'])) {
                 $step['options']['sort'] = $step['sort'];
             }
 
@@ -107,6 +107,16 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
             return $arr;
         });
         return $this->action()[0]['n'];
+    }
+
+    public function exist()
+    {
+        $this->bind('where', function ($arr) {
+            $arr['select'] = ['_id'];
+            $arr['options']['limit'] = 1;
+            return $arr;
+        });
+        return count($this->action()) > 0;
     }
 
     public function select($list)
@@ -160,6 +170,10 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
 
     public function first($column = '')
     {
+        $this->bind('where', function ($data) {
+            $data['options']['limit'] = 1;
+            return $data;
+        });
         if ($column) {
             $this->select($column);
         }
@@ -202,5 +216,89 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
     {
         $temp = get_called_class();
         return new $temp();
+    }
+
+    static function listCollections($db)
+    {
+        $manager = new MongoDB\Driver\Manager("mongodb://" . KOD_MONGODB_USER . ":" . KOD_MONGODB_PASSWORD . "@" . KOD_MONGODB_HOST);
+        $command = new MongoDB\Driver\Command(array(
+            'listCollections' => 1
+        ));
+
+        $cursor = $manager->executeCommand($db, $command);
+
+        $result = array();
+        foreach ($cursor as $v) {
+            $result[] = $v->name;
+        }
+        return $result;
+    }
+
+    public function insert($params)
+    {
+        $manager = new MongoDB\Driver\Manager("mongodb://" . $this->dbWriteUser . ":" . $this->dbWritePass . "@" . KOD_MONGODB_HOST);
+        $bulk = new MongoDB\Driver\BulkWrite();
+        $bulk->insert($params);
+
+        try {
+            $result = $manager->executeBulkWrite($this->dbName . '.' . $this->tableName, $bulk);
+            $this->breakAll();
+            return $result->getInsertedCount();
+        } catch (MongoDB\Driver\Exception\BulkWriteException $e) {
+            var_dump($e->getWriteResult()->getWriteErrors());
+        }
+    }
+
+    public function update($params)
+    {
+        $this->bind('where', function ($step) use ($params) {
+            if (!empty($step['filter'])) {
+                $manager = new MongoDB\Driver\Manager("mongodb://" . $this->dbWriteUser . ":" . $this->dbWritePass . "@" . KOD_MONGODB_HOST);
+                $bulk = new MongoDB\Driver\BulkWrite();
+                $bulk->update($step['filter'], $params);
+//            $bulk->delete(array('product_id' => 125));
+
+                $result = $manager->executeBulkWrite($this->dbName . '.' . $this->tableName, $bulk);
+                try {
+                    $this->breakAll();
+                    return $result->getModifiedCount();
+//                    var_dump($result->getDeletedCount());
+                } catch (MongoDB\Driver\Exception\BulkWriteException $e) {
+                    var_dump($e->getWriteResult()->getWriteErrors());
+                }
+            }
+        });
+        return $this->action();
+    }
+
+    public function deleteById($id)
+    {
+        $manager = new MongoDB\Driver\Manager("mongodb://" . $this->dbWriteUser . ":" . $this->dbWritePass . "@" . KOD_MONGODB_HOST);
+        $bulk = new MongoDB\Driver\BulkWrite();
+        $bulk->delete(array('_id' => new \MongoDB\BSON\ObjectId($id)));
+
+        $result = $manager->executeBulkWrite($this->dbName . '.' . $this->tableName, $bulk);
+        return $result->getDeletedCount();
+    }
+
+    final function delete()
+    {
+        $this->bind('where', function ($step) {
+            if (!empty($step['filter'])) {
+                $manager = new MongoDB\Driver\Manager("mongodb://" . $this->dbWriteUser . ":" . $this->dbWritePass . "@" . KOD_MONGODB_HOST);
+                $bulk = new MongoDB\Driver\BulkWrite();
+                $bulk->delete($step['filter']);
+                $result = $manager->executeBulkWrite($this->dbName . '.' . $this->tableName, $bulk);
+                try {
+                    $this->breakAll();
+                    return $result->getDeletedCount();
+                } catch (MongoDB\Driver\Exception\BulkWriteException $e) {
+                    var_dump($e->getWriteResult()->getWriteErrors());
+                }
+            } else {
+                throw new Exception('正在尝试删除所有数据');
+            }
+        });
+        return $this->action();
     }
 }

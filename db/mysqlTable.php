@@ -131,7 +131,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         });
         $this->bind('sql', function ($arr) {
             foreach ($arr['select'] as $k => $v) {
-                if (in_array($v, array('desc', 'table'))) {
+                if (in_array($v, ['desc', 'table', 'default'])) {
                     $arr['select'][$k] = '`' . $v . '`';
                 }
             }
@@ -498,10 +498,14 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
 
     public function first($column = '')
     {
+        $this->limit_ = 1;
         if ($column) {
             $this->select($column);
         }
         $returnData = $this->action();
+        if (count($returnData) === 0) {
+            return null;
+        }
         $data = current($returnData);
         if ($column) {
             if (preg_match('/ as (.*)/', $column, $match)) {
@@ -626,7 +630,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $sqlList[$this->verticalTable[$k]][$k] = $v;
                             continue;
                         }
-                        $paramsTemp[] = $k . "=?";
+                        if (in_array($k, ['desc', 'table', 'default'])) {
+                            $paramsTemp[] = '`' . $k . '`' . "=?";
+                        } else {
+                            $paramsTemp[] = $k . "=?";
+                        }
                         $excuteArr[] = $v;
                     } else {
                         $paramsTemp[] = $v;
