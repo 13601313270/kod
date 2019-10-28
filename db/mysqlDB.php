@@ -112,6 +112,32 @@ final class kod_db_mysqlDB
 
     }
 
+    public function transaction($sqlList)
+    {
+        $con = $this->getConnect();
+        try {
+            $con->beginTransaction();
+            $result = array();
+            foreach ($sqlList as $k => $sql) {
+                if ($k === count($sqlList) - 1) {
+                    $temp = $con->query($sql);
+                    if ($temp !== false) {
+                        $temp->setFetchMode(PDO::FETCH_ASSOC);
+                        foreach ($temp as $row) {
+                            $result[] = $row; //你可以用 echo($GLOBAL); 来看到这些值
+                        }
+                    }
+                } else {
+                    $con->query($sql);
+                }
+            }
+            $con->commit();
+            return $result;
+        } catch (Exception $e) {
+            $con->rollBack();
+        }
+    }
+
     public function runsql($sql, $returnType = 'default', $con = null)
     {
         if ($con === null) {
