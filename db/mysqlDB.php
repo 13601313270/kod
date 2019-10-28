@@ -112,23 +112,34 @@ final class kod_db_mysqlDB
 
     }
 
-    public function transaction($sqlList)
+    public function transaction($sqlList, $dataList)
     {
         $con = $this->getConnect();
         try {
             $con->beginTransaction();
+
+
+            // 在创建连接后，加入
+            $con->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false);
+            $con->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             $result = array();
+
             foreach ($sqlList as $k => $sql) {
-                if ($k === count($sqlList) - 1) {
-                    $temp = $con->query($sql);
-                    if ($temp !== false) {
-                        $temp->setFetchMode(PDO::FETCH_ASSOC);
-                        foreach ($temp as $row) {
-                            $result[] = $row; //你可以用 echo($GLOBAL); 来看到这些值
+                $sth = $con->prepare($sql);
+                if ($sth !== false) {
+                    $sth->setFetchMode(PDO::FETCH_ASSOC);
+                    $sth->execute($dataList[$k]);
+                    if ($k === count($sqlList) - 1) {
+                        if ($this->isLastInsertId) {
+                            $result = $con->lastInsertId();
+                        } elseif ($this->isRowCount) {
+                            $result = $sth->rowCount();
+                        } else {
+                            $result = $sth->fetchAll();
                         }
                     }
                 } else {
-                    $con->query($sql);
+                    throw new Exception('sql报错' . $sql);
                 }
             }
             $con->commit();
