@@ -94,16 +94,21 @@ abstract class kod_web_restApi
         self::getinstance()->newCheck(function () use ($where) {
             if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
                 $data = json_decode(file_get_contents("php://input"), true);
-                $data = array_merge($_GET, $data);
                 if ($data === null) {
                     $data = array();
                 }
-                $data = array_merge($data, $_GET);
-                if (count($where) > 0) {
-                    foreach ($where as $k => $v) {
-                        if ($data[$k] !== $v) {
-                            return false;
+                $data = array_merge($_GET, $data);//后面盖住前面
+                if (is_array($where)) {
+                    if (count($where) > 0) {
+                        foreach ($where as $k => $v) {
+                            if ($data[$k] !== $v) {
+                                return false;
+                            }
                         }
+                    }
+                } else {
+                    if ($where !== self::$action) {
+                        return false;
                     }
                 }
                 return $data;
