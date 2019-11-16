@@ -440,13 +440,15 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
     public function foreignData($foreignKey, $select = '*')
     {
         $this->bind('data', function ($data) use ($foreignKey, $select) {
-            $allKeys = array_column($data, 'course');
             if ($this->foreignKey[$foreignKey]) {
                 $dbObject = new $this->foreignKey[$foreignKey];
-                $outerArr = $dbObject->onlyColumn($select)->getByKeys($allKeys);
+                $allKeys = array_column($data, $foreignKey);
                 $temp = array();
-                foreach ($outerArr as $item) {
-                    $temp[$item['id']] = $item;
+                if (count($allKeys) > 0) {
+                    $outerArr = $dbObject->select($select)->getByKeys($allKeys);
+                    foreach ($outerArr as $item) {
+                        $temp[$item['id']] = $item;
+                    }
                 }
                 foreach ($data as $k => $v) {
                     $data[$k][$foreignKey] = $temp[$v[$foreignKey]];
