@@ -62,10 +62,48 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
             }
 
             if (in_array('count(*)', $step['select'])) {
-                $command = new MongoDB\Driver\Command(array(
+                $params = array(
                     'count' => $this->tableName,
                     'query' => $step['filter']
-                ));
+                );
+                if (isset($step['options']['group'])) {
+                    if (is_array($step['options']['group'])) {
+                        $params = [
+                            'aggregate' => $this->tableName,
+                            'pipeline' => [
+                                array(
+                                    '$match' => $step['filter']
+                                ),
+                                array(
+                                    '$group' => [
+                                        '_id' => array(),
+                                        'count' => ['$sum' => 1]
+                                    ],
+                                )
+                            ]
+                        ];
+                        foreach ($step['options']['group'] as $temp) {
+                            $params['pipeline'][1]['$group']['_id'][$temp] = '$' . $temp;
+                        }
+                    } else {
+                        $params = [
+                            'aggregate' => $this->tableName,
+                            'pipeline' => [
+                                array(
+                                    '$match' => $step['filter']
+                                ),
+                                array(
+                                    '$group' => [
+                                        '_id' => array(),
+                                        'count' => ['$sum' => 1]
+                                    ],
+                                )
+                            ]
+                        ];
+                        $params['pipeline'][1]['$group']['_id'][$step['options']['group']] = '$' . $step['options']['group'];
+                    }
+                }
+                $command = new MongoDB\Driver\Command($params);
                 $cursor = $manager->executeCommand($this->dbName, $command);
             } else {
                 $query = new MongoDB\Driver\Query($step['filter'], $step['options']);
@@ -75,7 +113,11 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
             foreach ($cursor as $v) {
                 $result[] = $this->object_array($v);
             }
-            return $result;
+            if (isset($step['options']['group'])) {
+                return $result[0]['result'];
+            } else {
+                return $result;
+            }
         });
         $this->bind('modified', function ($data) {
             if (is_array($data)) {
@@ -95,6 +137,15 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
     {
         $this->bind('where', function ($data) use ($arr) {
             $data['filter'] = $arr;
+            return $data;
+        });
+        return $this;
+    }
+
+    public function groupBy($group)
+    {
+        $this->bind('where', function ($data) use ($group) {
+            $data['options']['group'] = $group;
             return $data;
         });
         return $this;
