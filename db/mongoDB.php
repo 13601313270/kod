@@ -214,9 +214,15 @@ class kod_db_mongoDB extends kod_tool_lifeCycle
         return $this;
     }
 
-    public function get()
+    public function get(Closure $mapFunction = null)
     {
-        return $this->action();
+        $data = $this->action();
+        if ($mapFunction !== null) {
+            foreach ($data as $k => $item) {
+                $data[$k] = $mapFunction($item);
+            }
+        }
+        return $data;
     }
 
     public function first($column = '')
