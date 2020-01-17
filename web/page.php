@@ -6,6 +6,7 @@
  * Time: 下午3:23
  */
 include_once KOD_DIR_NAME."/smarty/libs/Smarty.class.php";
+include_once 'lessc.inc.php';
 class kod_web_page extends stdClass{
 	final public function __construct()
 	{
@@ -20,28 +21,34 @@ class kod_web_page extends stdClass{
 
 	}
 	public static function machiningTemplate($tpl_source, Smarty_Internal_Template $template){
+	    // 只有文件变化，才会触发
 		//分解css
-		if(defined('KOD_SMARTY_CSS_DIR')){
-			preg_match_all("/<style>(.*?)<\/style>/is",$tpl_source,$match);
-			$cssHtmlArr = $match[1];
+        if(defined('KOD_SMARTY_CSS_DIR') && defined('KOD_SMARTY_CSS_HOST')) {
+			preg_match_all("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is",$tpl_source,$match);
+			$cssHtmlArr = $match[2];
 			if(!empty($cssHtmlArr)){//如果匹配到了style内容
 				//写入文件
 				$content = "";
-				foreach($cssHtmlArr as $cssHtml){
-					$cssHtml = str_replace("\n",'',$cssHtml);
-					$cssHtml = str_replace("\t",'',$cssHtml);
-					preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is",$cssHtml,$match2);
-					foreach($match2[1] as $v){
-						$cssHtml.='@-moz-keyframes '.$v;
-						$cssHtml.='@-webkit-keyframes '.$v;
-						$cssHtml.='@-o-keyframes '.$v;
-					}
-					preg_match_all("/animation\s*:\s*[^;]+[;|}]/is",$cssHtml,$match2);
-					foreach($match2[0] as $v){
-						$cssHtml.='-moz-'.$v;
-						$cssHtml.='-webkit-'.$v;
-						$cssHtml.='-o-'.$v;
-					}
+                foreach ($cssHtmlArr as $k => $cssHtml) {
+                    if ($match[1][$k] === ' lang="less"') {
+                        $less = new lessc;
+                        $cssHtml = $less->compile($cssHtml);
+                    } else {
+                        $cssHtml = str_replace("\n",'',$cssHtml);
+                        $cssHtml = str_replace("\t",'',$cssHtml);
+                        preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is",$cssHtml,$match2);
+                        foreach($match2[1] as $v){
+                            $cssHtml.='@-moz-keyframes '.$v;
+                            $cssHtml.='@-webkit-keyframes '.$v;
+                            $cssHtml.='@-o-keyframes '.$v;
+                        }
+                        preg_match_all("/animation\s*:\s*[^;]+[;|}]/is",$cssHtml,$match2);
+                        foreach($match2[0] as $v){
+                            $cssHtml.='-moz-'.$v;
+                            $cssHtml.='-webkit-'.$v;
+                            $cssHtml.='-o-'.$v;
+                        }
+                    }
 					$content .=$cssHtml;
 				}
 				//array(KOD_DIR_NAME,'~KOD+'),
@@ -55,27 +62,19 @@ class kod_web_page extends stdClass{
 				fclose($file);
 				unset($file);
 				//获取可以访问生成css的url地址
-				if(defined('KOD_SMARTY_CSS_HOST')){
-					$cssUrl = KOD_SMARTY_CSS_HOST.$fileName;
-				}else{
-					$cssUrl = "/".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName;
-					if($cssUrl==""){
-						throw new Exception("生成的css文件【".str_replace(webDIR,"",KOD_SMARTY_CSS_DIR).$fileName."】，并不能生成对应的url网址，请配置对应的rewrite规则");
-					}
-				}
+                $cssUrl = KOD_SMARTY_CSS_HOST . $fileName;
 				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="'.$cssUrl.'?'.time().'"/>';
 				if(strpos($tpl_source,'</head>')>-1){
-					$tpl_source = preg_replace("/<style>(.*?)<\/style>/is","",$tpl_source);
+					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is","",$tpl_source);
 					$tpl_source = explode('<body>',$tpl_source);
 					$tpl_source[0] = str_replace('</head>',"\t".$cssLinkHtml."\n</head>",$tpl_source[0]);
 					$tpl_source = implode('<body>',$tpl_source);
 				}else{
-					$tpl_source = preg_replace("/<style>(.*?)<\/style>/is",$cssLinkHtml,$tpl_source);
+					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is",$cssLinkHtml,$tpl_source);
 				}
 
 			}else{
 			}
-			$tpl_source = $tpl_source;
 		}
 		return $tpl_source;
 	}

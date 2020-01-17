@@ -5,7 +5,7 @@
  * Date: 2019-03-29
  * Time: 16:11
  */
-include_once('../../metaPHP/include.php');
+include_once(dirname(dirname(__DIR__)) . '/metaPHP/include.php');
 $metaApi = new phpInterpreter('');
 
 function Mstring($str, $borderStr = "'")
@@ -97,6 +97,7 @@ $KOD_COMMENT_MYSQLDB = $dbName;
 if (empty($KOD_COMMENT_MYSQLDB)) {
     exit;
 }
+$srcPath = getSingleStdin('业务代码所在文件夹', 'src');
 $define = array(
     'webDIR' => array(
         'type' => '.',
@@ -105,7 +106,7 @@ $define = array(
             'name' => 'dirname',
             'property' => [D('__FILE__')]
         ),
-        'object2' => D('string', '/' . getSingleStdin('业务代码所在文件夹', 'app') . '/'),
+        'object2' => D('string', '/' . $srcPath . '/'),
     ),
     'KOD_SMARTY_COMPILR_DIR' => array(
         'type' => '.',
@@ -257,7 +258,7 @@ $metaApi->codeMeta['child'][] = array(
         )
     ]
 );
-file_put_contents('../../include.php', $metaApi->getCode());
+file_put_contents(dirname(dirname(__DIR__)) . '/include.php', $metaApi->getCode());
 //输出hello World的代码的结构，可以理解为下面的复合数组形式
 $metaApi->codeMeta = array(
     'type' => 'window',
@@ -551,7 +552,7 @@ $metaApi->codeMeta = array(
                 array(
                     'type' => 'functionCall',
                     'name' => 'chdir',
-                    'property' => [D('string', './app/')]
+                    'property' => [D('string', './' . $srcPath . '/')]
                 ),
                 array(
                     'type' => 'if',
@@ -725,11 +726,11 @@ $metaApi->codeMeta = array(
         )
     ),
 );
-file_put_contents('../../index.php', $metaApi->getCode());
+file_put_contents(dirname(dirname(__DIR__)) . '/index.php', $metaApi->getCode());
 
 
-file_put_contents('../../rewrite.conf', '/ /index.php');
-mkdir('../../app');
+file_put_contents(dirname(dirname(__DIR__)) . '/rewrite.conf', '/ /index.php');
+mkdir(dirname(dirname(__DIR__)) . '/' . $srcPath);
 $metaApi->codeMeta = array(
     'type' => 'window',
     'child' => array(
@@ -773,14 +774,14 @@ $metaApi->codeMeta = array(
         )
     )
 );
-file_put_contents('../../app/index.php', $metaApi->getCode());
-file_put_contents('../../app/index.tpl', '<html>
+file_put_contents(dirname(dirname(__DIR__)) . '/' . $srcPath . '/index.php', $metaApi->getCode());
+file_put_contents(dirname(dirname(__DIR__)) . '/' . $srcPath . '/index.tpl', '<html>
     <body>
     <h1>{{$title}}</h1>
     <p>{{$content}}</p>
     </body>
 </html>');
-mkdir('../../include');
+mkdir(dirname(dirname(__DIR__)) . '/include');
 
 $metaApi->codeMeta = array(
     'type' => 'window',
@@ -794,5 +795,5 @@ $metaApi->codeMeta = array(
         )
     )
 );
-file_put_contents('../../include/restApi.php', $metaApi->getCode());
+file_put_contents(dirname(dirname(__DIR__)) . '/include/restApi.php', $metaApi->getCode());
 exit;
