@@ -632,7 +632,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $sqlList[$this->verticalTable[$k]][$k] = $v;
                             continue;
                         }
-                        if (in_array($k, ['desc', 'table', 'default'])) {
+                        if (in_array($k, ['desc', 'table', 'default', 'count'])) {
                             $paramsTemp[] = '`' . $k . '`' . "=?";
                         } else {
                             $paramsTemp[] = $k . "=?";
