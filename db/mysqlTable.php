@@ -131,7 +131,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         });
         $this->bind('sql', function ($arr) {
             foreach ($arr['select'] as $k => $v) {
-                if (in_array($v, ['desc', 'table', 'default'])) {
+                if (in_array($v, ['desc', 'table', 'default', 'count', 'replace'])) {
                     $arr['select'][$k] = '`' . $v . '`';
                 }
             }
@@ -632,7 +632,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $sqlList[$this->verticalTable[$k]][$k] = $v;
                             continue;
                         }
-                        if (in_array($k, ['desc', 'table', 'default', 'count'])) {
+                        if (in_array($k, ['desc', 'table', 'default', 'count', 'replace'])) {
                             $paramsTemp[] = '`' . $k . '`' . "=?";
                         } else {
                             $paramsTemp[] = $k . "=?";
