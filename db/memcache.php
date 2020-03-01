@@ -93,6 +93,11 @@ class kod_db_memcache{
 			return $value;
 		}
 	}
+
+    public static function callCache($key, $expire, $function, $funcIsExpire = '')
+    {
+        return self::returnCacheOrSave($key, $function, 0, $expire, $funcIsExpire);
+    }
 }
 //memcache方法在网址  http://php.net/manual/zh/book.memcache.php  中查看
 //快速调取释放类型，每一次都链接，并且断开
