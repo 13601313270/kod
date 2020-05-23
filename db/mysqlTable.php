@@ -70,7 +70,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                         if (is_numeric($item[2])) {
                             $returnSqlArr[] = $item[0] . $action . $item[2];
                         } else {
-                            $returnSqlArr[] = $item[0] . $action . '?';
+                            if (in_array($item[0], ['desc', 'table', 'default', 'count', 'replace'])) {
+                                $returnSqlArr[] = '`' . $item[0] . '`' . $action . '?';
+                            } else {
+                                $returnSqlArr[] = $item[0] . $action . '?';
+                            }
                             $returnSlotData[] = $item[2];
                         }
                     } elseif ($item[1] === 'in') {
