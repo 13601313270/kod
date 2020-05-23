@@ -68,7 +68,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $action = $item[1];
                         }
                         if (is_numeric($item[2])) {
-                            $returnSqlArr[] = $item[0] . $action . $item[2];
+                            if (in_array($item[0], ['desc', 'table', 'default', 'count', 'replace'])) {
+                                $returnSqlArr[] = '`' . $item[0] . '`' . $action . $item[2];
+                            } else {
+                                $returnSqlArr[] = $item[0] . $action . $item[2];
+                            }
                         } else {
                             if (in_array($item[0], ['desc', 'table', 'default', 'count', 'replace'])) {
                                 $returnSqlArr[] = '`' . $item[0] . '`' . $action . '?';
@@ -680,6 +684,57 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, $where[1]);
         });
         $this->action();
+    }
+
+    final function showCreateTable()
+    {
+        $tableInfo = kod_db_mysqlDB::create($this->dbName)
+            ->setUserAndPass($this->dbReadUser, $this->dbReadPass)
+            ->sql("show create table " . $this->getTableName());
+        if (preg_match('/CREATE TABLE [`|"].+?[`|"]\s*\(([\S|\s]*)\)/', $tableInfo[0]['Create Table'], $match)) {
+            $tableInfo = explode(',', $match[1]);
+            $option = array();
+            foreach ($tableInfo as $k => $v) {
+                if (preg_match("/[`|\"](\S+)[`|\"] (int|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/", $v, $match)) {
+                    $item = array(
+                        'dataType' => $match[2],
+                        'maxLength' => intval($match[3]),
+                        'notNull' => !empty($match[4]),
+                        'title' => empty($match[8]) ? $match[1] : $match[8],
+                    );
+                    if ($match[6] !== null) {
+                        $item['default'] = $match[6];
+                    }
+                    $option[$match[1]] = $item;
+                    if (!empty($match[5]) && $match[5] == " AUTO_INCREMENT") {
+                        $option[$match[1]]["AUTO_INCREMENT"] = true;
+                    }
+                } elseif (preg_match("/[`|\"](\S+)[`|\"] (text|datetime|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '([^']+)')?( COMMENT '(\S+)')?/", $v, $match)) {
+                    $item = array(
+                        'dataType' => $match[2],
+                        'notNull' => !empty($match[3]),
+                        'title' => empty($match[7]) ? $match[1] : $match[7],
+                    );
+                    if ($match[5] !== null) {
+                        $item['default'] = $match[5];
+                    }
+                    $option[$match[1]] = $item;
+                } elseif (preg_match("/[`|\"](\S+)[`|\"] timestamp( NOT NULL| DEFAULT NULL)( DEFAULT CURRENT_TIMESTAMP)?( ON UPDATE CURRENT_TIMESTAMP)?( COMMENT '(\S+)')?/", $v, $match)) {
+                    $option[$match[1]] = array(
+                        "dataType" => 'timestamp',
+                        "notNull" => !empty($match[2]),
+                        "title" => "",
+                    );
+                } elseif (preg_match("/UNIQUE KEY [`|\"](\S+)[`|\"] \([`|\"]([^,]+)[`|\"]\)/", $v, $match)) {
+                    $option[$match[2]]['unique'] = true;
+                } elseif (preg_match("/PRIMARY KEY \([`|\"]([^,]+)[`|\"]\)/", $v, $match)) {
+                    $option[$match[1]]['primarykey'] = true;
+                }
+            }
+            return $option;
+        } else {
+            return array();
+        }
     }
 }
 
