@@ -681,7 +681,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->rowCount()->sql($sql, [$id]);
     }
 
-    final function delete()
+    public function delete()
     {
         $this->bind('select', function ($step) {
             $where = $this->getWhereStr($step['where']);
@@ -692,7 +692,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         $this->action();
     }
 
-    final function showCreateTable()
+    public function showCreateTable()
     {
         $tableInfo = kod_db_mysqlDB::create($this->dbName)
             ->setUserAndPass($this->dbReadUser, $this->dbReadPass)
