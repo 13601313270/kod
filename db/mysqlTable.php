@@ -42,6 +42,12 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return $this->tableName;
     }
 
+    // 获取主键
+    public function getKeyColumnName()
+    {
+        return $this->key;
+    }
+
     public $stage = ['select', 'join', 'sql', 'afterSql', 'data'];
 
     private function getWhereStr($arr)
