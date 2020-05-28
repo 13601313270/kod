@@ -715,7 +715,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     if (!empty($match[5]) && $match[5] == " AUTO_INCREMENT") {
                         $option[$match[1]]["AUTO_INCREMENT"] = true;
                     }
-                } elseif (preg_match("/[`|\"](\S+)[`|\"] (text|datetime|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '([^']+)')?( COMMENT '(\S+)')?/", $v, $match)) {
+                } elseif (preg_match("/[`|\"](\S+)[`|\"] (text|mediumtext|datetime|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '([^']+)')?( COMMENT '(\S+)')?/", $v, $match)) {
                     $item = array(
                         'dataType' => $match[2],
                         'notNull' => !empty($match[3]),
