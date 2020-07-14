@@ -18,7 +18,7 @@ define('KOD_SMARTY_COMPILR_DIR',dirname(__FILE__).'/html/smarty_cache');
 
 define('KOD_MYSQL_SERVER','118.190.95.219');
 define('KOD_MYSQL_USER','root');
-define('KOD_MYSQL_PASSWORD','1082322$%&whr309568486');
+define('KOD_MYSQL_PASSWORD','XXX');
 define('KOD_COMMENT_MYSQLDB','dbName');
 
 define("KOD_SMARTY_CSS_DIR",dirname(__FILE__)."/cssCreate/");
