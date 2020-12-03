@@ -74,13 +74,13 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $action = $item[1];
                         }
                         if (is_numeric($item[2])) {
-                            if (in_array($item[0], ['desc', 'table', 'default', 'count', 'replace'])) {
+                            if (in_array($item[0], ['desc', 'table', 'default', 'count', 'replace', 'order'])) {
                                 $returnSqlArr[] = '`' . $item[0] . '`' . $action . $item[2];
                             } else {
                                 $returnSqlArr[] = $item[0] . $action . $item[2];
                             }
                         } else {
-                            if (in_array($item[0], ['desc', 'table', 'default', 'count', 'replace'])) {
+                            if (in_array($item[0], ['desc', 'table', 'default', 'count', 'replace', 'order'])) {
                                 $returnSqlArr[] = '`' . $item[0] . '`' . $action . '?';
                             } else {
                                 $returnSqlArr[] = $item[0] . $action . '?';
@@ -145,7 +145,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         });
         $this->bind('sql', function ($arr) {
             foreach ($arr['select'] as $k => $v) {
-                if (in_array($v, ['desc', 'table', 'default', 'count', 'replace'])) {
+                if (in_array($v, ['desc', 'table', 'default', 'count', 'replace', 'order'])) {
                     $arr['select'][$k] = '`' . $v . '`';
                 }
             }
@@ -646,7 +646,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             $sqlList[$this->verticalTable[$k]][$k] = $v;
                             continue;
                         }
-                        if (in_array($k, ['desc', 'table', 'default', 'count', 'replace'])) {
+                        if (in_array($k, ['desc', 'table', 'default', 'count', 'replace', 'order'])) {
                             $paramsTemp[] = '`' . $k . '`' . "=?";
                         } else {
                             $paramsTemp[] = $k . "=?";

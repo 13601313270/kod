@@ -107,6 +107,7 @@ final class kod_db_mysqlDB
             }
         } else {
             print_r($con->errorInfo());
+            print_r($data);
             throw new Exception('sql报错' . $sql);
         }
 
