@@ -82,9 +82,19 @@ final class kod_db_mysqlDB
 
     private $isRowCount = false;
 
+    // 返回值是影响条数
     public function rowCount()
     {
         $this->isRowCount = true;
+        return $this;
+    }
+
+    private $isSuccessState = false;
+
+    // 返回值是是否执行成功
+    public function isSuccess($result = true)
+    {
+        $this->isSuccessState = $result;
         return $this;
     }
 
@@ -102,6 +112,13 @@ final class kod_db_mysqlDB
                 return $con->lastInsertId();
             } elseif ($this->isRowCount) {
                 return $sth->rowCount();
+            } elseif ($this->isSuccessState) {
+                $error = $sth->errorInfo();
+                if ($error[0] === '00000') {
+                    return true;
+                } else {
+                    return $error;
+                }
             } else {
                 return $sth->fetchAll();
             }
