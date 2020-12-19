@@ -291,7 +291,13 @@ abstract class kod_web_restApi
                     echo json_encode($params);
                     exit;
                 } else {
-                    echo $params;
+                    if ($params === true) {
+                        echo 'true';
+                    } else if ($params === true) {
+                        echo 'false';
+                    } else {
+                        echo $params;
+                    }
                     exit;
                 }
             }
