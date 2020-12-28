@@ -28,8 +28,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * 函数的含义说明
      *
      * @access public
-     * @since 1.0
      * @return $this
+     * @since 1.0
      */
     static function create()
     {
@@ -201,7 +201,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     $list = explode(' ', $k);
                     if (in_array($list[1], array('like', 'in'))) {
                         $whereParams['and'][] = [$list[0], $list[1], $v];
-                    } else if (in_array(substr($k, -2), array('>=', '<=', '<>'))) {
+                    } else if (in_array(substr($k, -2), array('>=', '<=', '<>', '!='))) {
                         $whereParams['and'][] = [substr($k, 0, -2), substr($k, -2), $v];
                     } else if (in_array(substr($k, -1), array('>', '<'))) {
                         $whereParams['and'][] = [substr($k, 0, -1), substr($k, -1), $v];
@@ -240,8 +240,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * @access public
      * @param mixed $columnKey 键
      * @param mixed $columnArr 值数组
-     * @since 1.0
      * @return $this
+     * @since 1.0
      */
     public function in($columnKey, $columnArr)
     {
@@ -373,8 +373,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * @param mixed $table 要连接的表的对应类名
      * @param mixed $select 连接后提取的数字
      * @param mixed $linkArr 连接的表的别名
-     * @since 1.0
      * @return $this
+     * @since 1.0
      */
     public function leftJoin($table, $select = '*', $linkArr = '')
     {
@@ -398,8 +398,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * @param mixed $table 要连接的表的对应类名
      * @param mixed $select 连接后提取的数字
      * @param mixed $linkArr 连接的表的别名
-     * @since 1.0
      * @return $this
+     * @since 1.0
      */
     public function fullJoin($table, $select = '*', $linkArr = '')
     {
@@ -414,8 +414,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
      * @param mixed $table 要连接的表的对应类名
      * @param mixed $select 连接后提取的数字
      * @param mixed $linkArr 连接的表的别名
-     * @since 1.0
      * @return $this
+     * @since 1.0
      */
     public function join($table, $select = '*', $linkArr = '')
     {
