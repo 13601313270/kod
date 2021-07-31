@@ -705,7 +705,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     $item = array(
                         'dataType' => $match[2],
                         'maxLength' => intval($match[3]),
-                        'notNull' => !empty($match[4]),
+                        'notNull' => !empty($match[4]) && $match[4] === ' NOT NULL',
                         'title' => empty($match[8]) ? $match[1] : $match[8],
                     );
                     if ($match[6] !== null) {
@@ -718,7 +718,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                 } elseif (preg_match("/[`|\"](\S+)[`|\"] (text|mediumtext|datetime|date)( NOT NULL| DEFAULT NULL)?( DEFAULT '([^']+)')?( COMMENT '(\S+)')?/", $v, $match)) {
                     $item = array(
                         'dataType' => $match[2],
-                        'notNull' => !empty($match[3]),
+                        'notNull' => !empty($match[3]) && $match[3] === ' NOT NULL',
                         'title' => empty($match[7]) ? $match[1] : $match[7],
                     );
                     if ($match[5] !== null) {
@@ -728,7 +728,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                 } elseif (preg_match("/[`|\"](\S+)[`|\"] timestamp( NOT NULL| DEFAULT NULL)( DEFAULT CURRENT_TIMESTAMP)?( ON UPDATE CURRENT_TIMESTAMP)?( COMMENT '(\S+)')?/", $v, $match)) {
                     $option[$match[1]] = array(
                         "dataType" => 'timestamp',
-                        "notNull" => !empty($match[2]),
+                        "notNull" => !empty($match[2]) && $match[2] === ' NOT NULL',
                         "title" => "",
                     );
                 } elseif (preg_match("/UNIQUE KEY [`|\"](\S+)[`|\"] \([`|\"]([^,]+)[`|\"]\)/", $v, $match)) {

@@ -745,7 +745,7 @@ abstract class kod_db_mysqlSingle
                     $item = array(
                         'dataType' => $match[2],
                         'maxLength' => intval($match[3]),
-                        'notNull' => !empty($match[4]),
+                        'notNull' => !empty($match[4]) && $match[4] !== 'NOT NULL',
                         'title' => empty($match[8]) ? $match[1] : $match[8],
                     );
                     if ($match[6] !== null) {
