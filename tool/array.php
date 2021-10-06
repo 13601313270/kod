@@ -43,4 +43,15 @@ class kod_tool_array{
 		array_multisort($newArr,$sorting,$arr);
 		return $arr;
 	}
+
+    public static function filter($arr, Closure $callback)
+    {
+        $returnList = [];
+        foreach ($arr as $item) {
+            if ($callback($item) === true) {
+                $returnList[] = $item;
+            }
+        }
+        return $returnList;
+    }
 }
