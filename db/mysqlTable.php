@@ -742,6 +742,11 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             return array();
         }
     }
+
+    public function getForeignKey()
+    {
+        return $this->foreignKey;
+    }
 }
 
 /*
