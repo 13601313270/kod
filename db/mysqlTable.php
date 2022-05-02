@@ -87,7 +87,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                             }
                             $returnSlotData[] = $item[2];
                         }
-                    } elseif ($item[1] === 'in') {
+                    } elseif ($item[1] === 'in' || $item[1] === 'not in') {
                         if (gettype($item[2]) === 'object' && $item[2] instanceof kod_db_mysqlTable) {
                             $dbName = $item[2]->dbName;
                             $item[2]->bind('select', function ($data) use ($dbName) {
@@ -199,7 +199,9 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                 );
                 foreach ($arr as $k => $v) {
                     $list = explode(' ', $k);
-                    if (in_array($list[1], array('like', 'in'))) {
+                    if ($list[1] === 'not' && $list[2] === 'in') {
+                        $whereParams['and'][] = [$list[0], 'not in', $v];
+                    } else if (in_array($list[1], array('like', 'in'))) {
                         $whereParams['and'][] = [$list[0], $list[1], $v];
                     } else if (in_array(substr($k, -2), array('>=', '<=', '<>', '!='))) {
                         $whereParams['and'][] = [substr($k, 0, -2), substr($k, -2), $v];
