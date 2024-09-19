@@ -230,6 +230,8 @@ abstract class kod_web_restApi
                         $args[] = (array)$params[$name];
                     } else if ($param->getType() && $param->getType()->getName() === 'int') {
                         $args[] = intval($params[$name]);
+                    } else if ($param->getType() && $param->getType()->getName() === 'bool') {
+                        $args[] = $params[$name] === 'true' || $params[$name] === true;
                     } elseif (!is_array($params[$name])) { //参数不是数组类型　如 name = lemon
                         $args[] = $params[$name];
                     } else {
