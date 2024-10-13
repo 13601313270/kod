@@ -143,11 +143,22 @@ class restApi extends kod_web_restApi
                             $args[] = (array)$params[$name];
                         } else if ($param->getType() && $param->getType()->getName() === 'int') {
                             $args[] = intval($params[$name]);
+                        } else if ($param->getType() && $param->getType()->getName() === 'string') {
+                            if(!is_string($params[$name])) {
+                                kod_web_httpError::set(400, "error:参数{$name}的数据类型错误，需要是字符串");
+                                throw new Exception("error:参数{$name}的数据类型错误，需要是字符串");
+                            }
+                            $args[] = $params[$name];
+                        } else if ($param->getType() && $param->getType()->getName() === 'bool') {
+                            $args[] = $params[$name] === 'true' || $params[$name] === true;
                         } elseif (!is_array($params[$name])) { //参数不是数组类型　如 name = lemon
                             $args[] = $params[$name];
                         } else {
+                            var_dump($params[$name]);
+                            kod_web_httpError::set(400, "error:需要指定闭包函数的参数{$name}的数据类型");
                             throw new Exception("error:需要指定闭包函数的参数{$name}的数据类型");
                         }
+                        unset($params[$name]);
                     } elseif ($param->isDefaultValueAvailable()) {  //没有传参数，　检测时候参数有默认值
                         //getDefaultValue 获取参数默认值
                         $args[] = $param->getDefaultValue();
