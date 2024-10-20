@@ -254,7 +254,7 @@ abstract class kod_db_mysqlSingle
                     $whereParams[] = $v;
                 }
             } else {
-                foreach (array_diff(array_keys($arr), array("select", "where", "orderBy", "limit", "groupBy")) as $v) {
+                foreach (array_diff(array_keys($arr), array("select", "where", "orderBy", "limit", "groupBy" ,"group")) as $v) {
                     if (is_numeric($arr[$v])) {
                         $whereParams[] = $v . '=' . $arr[$v];
                     } else {

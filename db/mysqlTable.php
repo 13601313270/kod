@@ -626,7 +626,12 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
             "insert into " . $this->getTableName() . " (`" . implode("`,`", array_keys($params)) . "`) VALUES(:" . implode(",:", array_keys($params)) . ")",
             $params
         );
-        return kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->lastInsertId()->sql($sql[0], $sql[1]);
+        try {
+            $id = kod_db_mysqlDB::create($this->dbName)->setUserAndPass($this->dbWriteUser, $this->dbWritePass)->lastInsertId()->sql($sql[0], $sql[1]);
+            return intval($id);
+        } catch (Exception $e) {
+            throw new Exception("更新错误", 0, $e);
+        }
     }
 
     public function update($params)
@@ -700,11 +705,59 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         $tableInfo = kod_db_mysqlDB::create($this->dbName)
             ->setUserAndPass($this->dbReadUser, $this->dbReadPass)
             ->sql("show create table " . $this->getTableName());
+
+        $tableInfo2 = kod_db_mysqlDB::create($this->dbName)
+            ->setUserAndPass($this->dbReadUser, $this->dbReadPass)
+            ->sql("desc " . $this->getTableName());
+
+        // print_r($tableInfo);
+        // print_r($tableInfo2);
+        $option = array();
+        foreach ($tableInfo2 as $k => $v) {
+            if (preg_match("/(float)\((\d+),(\d+)\)/", $v['Type'], $match)) {
+                $item = array(
+                    'dataType' => $match[1],
+                    // 'maxLength' => $match[2],
+                    'notNull' => $v['Null'] === 'NO',
+                    'title' => $v['Field'],
+                    'default' => $v['Default'],
+                );
+            } else if (preg_match("/(int|float|smallint|varchar|tinyint|char|bigint)\((\d+)\)/", $v['Type'], $match)) {
+                // print_r($match);exit;
+                $item = array(
+                    'dataType' => $match[1],
+                    'maxLength' => $match[2],
+                    'notNull' => $v['Null'] === 'NO',
+                    'title' => $v['Field'],
+                    'default' => $v['Default'],
+                );
+            } else {
+                $item = array(
+                    'dataType' => $v['Type'],
+                    'notNull' => $v['Null'] === 'NO',
+                    'title' => $v['Field'],
+                    'default' => $v['Default'],
+                );
+            }
+            if ($v['primarykey'] === 1) {
+                $item['primarykey'] = true;
+            }
+            if ($v['Extra'] === 'auto_increment') {
+                $item['AUTO_INCREMENT'] = true;
+            }
+            // if($v['UNIQUE'] === 1) {
+            //     $item['UNIQUE'] = true
+            // }
+            $option[$v['Field']] = $item;
+        }
+        // print_r($option);exit;
+        return $option;
+        // exit;
         if (preg_match('/CREATE TABLE [`|"].+?[`|"]\s*\(([\S|\s]*)\)/', $tableInfo[0]['Create Table'], $match)) {
-            $tableInfo = explode(',', $match[1]);
             $option = array();
+            $tableInfo = explode(',', $match[1]);
             foreach ($tableInfo as $k => $v) {
-                if (preg_match("/[`|\"](\S+)[`|\"] (int|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/", $v, $match)) {
+                if (preg_match("/[`|\"](\S+)[`|\"] (int|float|smallint|varchar|tinyint|char|bigint)\((\d+)\)( NOT NULL| DEFAULT NULL)?( DEFAULT '(\S+)'| AUTO_INCREMENT)?( COMMENT '(\S+)')?/", $v, $match)) {
                     $item = array(
                         'dataType' => $match[2],
                         'maxLength' => intval($match[3]),

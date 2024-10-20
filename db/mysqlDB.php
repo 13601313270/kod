@@ -40,9 +40,13 @@ final class kod_db_mysqlDB
 
     public function getConnect()
     {
-        return new PDO("mysql:host=" . KOD_MYSQL_SERVER . ";dbname=" . $this->dbName, $this->loginUser, $this->loginPass, array(
-            PDO::MYSQL_ATTR_INIT_COMMAND => "set names " . $this->charset
-        ));
+        try {
+            $temp = new PDO("mysql:host=" . KOD_MYSQL_SERVER . ";dbname=" . $this->dbName, $this->loginUser, $this->loginPass, array(
+                PDO::MYSQL_ATTR_INIT_COMMAND => "set names " . $this->charset
+            ));
+        } catch (Exception $e) {
+        }
+        return $temp;
         //			PDO::MYSQL_ATTR_INIT_COMMAND => "SET sql_mode=".KOD_SQL_MODE.";set names ".$this->charset,
     }
 
