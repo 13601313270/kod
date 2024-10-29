@@ -585,8 +585,10 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         return ($this->action())[0];
     }
 
-    public function getByKeys($keys, $isObject = true)
-    {
+    public function getByKeys($keys, $isObject = true) {
+        if (count($keys) === 0) {
+            return array();
+        }
         $key = $this->tableName . '.' . $this->key . ' in';
         $this->where(array(
             $key => $keys
