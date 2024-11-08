@@ -29,7 +29,7 @@ class kod_web_page extends stdClass
 			if (!empty($cssHtmlArr)) {//如果匹配到了style内容
 				//写入文件
 				$content = "";
-				foreach ($cssHtmlArr as $k => $cssHtml) {
+				foreach ($cssHtmlArr as $cssHtml) {
 					if ($match[1][$k] === ' lang="less"') {
 						$less = new lessc;
 						$cssHtml = $less->compile($cssHtml);
@@ -62,7 +62,14 @@ class kod_web_page extends stdClass
 				fclose($file);
 				unset($file);
 				//获取可以访问生成css的url地址
-				$cssUrl = KOD_SMARTY_CSS_HOST . $fileName;
+				if (defined('KOD_SMARTY_CSS_HOST')) {
+					$cssUrl = KOD_SMARTY_CSS_HOST . $fileName;
+				} else {
+					$cssUrl = "/" . str_replace(webDIR, "", KOD_SMARTY_CSS_DIR) . $fileName;
+					if ($cssUrl == "") {
+						throw new Exception("生成的css文件【" . str_replace(webDIR, "", KOD_SMARTY_CSS_DIR) . $fileName . "】，并不能生成对应的url网址，请配置对应的rewrite规则");
+					}
+				}
 				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="' . $cssUrl . '?' . time() . '"/>';
 				if (strpos($tpl_source, '</head>') > -1) {
 					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is", "", $tpl_source);
@@ -72,8 +79,47 @@ class kod_web_page extends stdClass
 				} else {
 					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is", $cssLinkHtml, $tpl_source);
 				}
-
-			} else {
+			}
+		}
+		if (defined('KOD_SMARTY_SCRIPT_DIR')) {
+			preg_match_all("/<script pick>(.*?)<\/script>/is", $tpl_source, $match);
+			$cssHtmlArr = $match[1];
+			if (!empty($cssHtmlArr)) {//如果匹配到了style内容
+				//写入文件
+				$content = "";
+				foreach ($cssHtmlArr as $cssHtml) {
+					// $cssHtml = str_replace("\n", '', $cssHtml);
+					$cssHtml = str_replace("\t", '', $cssHtml);
+					$content .= $cssHtml;
+				}
+				//array(KOD_DIR_NAME,'~KOD+'),
+				$fileName = str_replace(KOD_DIR_NAME, '~kod', $template->template_resource);
+				$fileName = str_replace(array(".tpl", "/", "."), array("", "+", "_"), $fileName) . ".js";
+				$file = fopen(KOD_SMARTY_SCRIPT_DIR . $fileName, 'w'); // a模式就是一种追加模式，如果是w模式则会删除之前的内容再添加
+				if ($file === false) {
+					throw new Exception("写入文件失败，请保证路径【" . KOD_SMARTY_SCRIPT_DIR . "】存在，并有写入权限");
+				}
+				fwrite($file, $content);
+				fclose($file);
+				unset($file);
+				//获取可以访问生成css的url地址
+				if (defined('KOD_SMARTY_SCRIPT_HOST')) {
+					$cssUrl = KOD_SMARTY_SCRIPT_HOST . $fileName;
+				} else {
+					$cssUrl = "/" . str_replace(webDIR, "", KOD_SMARTY_SCRIPT_DIR) . $fileName;
+					if ($cssUrl == "") {
+						throw new Exception("生成的css文件【" . str_replace(webDIR, "", KOD_SMARTY_SCRIPT_DIR) . $fileName . "】，并不能生成对应的url网址，请配置对应的rewrite规则");
+					}
+				}
+				$cssLinkHtml = '<script language="javascript" src="' . $cssUrl . '?' . time() . '" type="text/javascript"></script>';
+				if (strpos($tpl_source, '</head>') > -1) {
+					$tpl_source = preg_replace("/<script pick>(.*?)<\/script>/is", "", $tpl_source);
+					$tpl_source = explode('<body>', $tpl_source);
+					$tpl_source[0] = str_replace('</head>', "\t" . $cssLinkHtml . "\n</head>", $tpl_source[0]);
+					$tpl_source = implode('<body>', $tpl_source);
+				} else {
+					$tpl_source = preg_replace("/<script pick>(.*?)<\/script>/is", $cssLinkHtml, $tpl_source);
+				}
 			}
 		}
 		return $tpl_source;
@@ -106,11 +152,11 @@ class kod_web_page extends stdClass
 		/*
 			$phoCode = str_replace("</html>",'<?php
 				$appendTestArr = array();
-				 foreach($_smarty_tpl->smarty->template_objects as $k=>$v){
-					 $appendTestArr[$k] = $v->tpl_vars;
-				 }
-				 echo kod_smarty_smarty::compilerTestAfter($appendTestArr);
-				 ?></html>',$phoCode);
+				foreach($_smarty_tpl->smarty->template_objects as $k=>$v){
+					$appendTestArr[$k] = $v->tpl_vars;
+				}
+				echo kod_smarty_smarty::compilerTestAfter($appendTestArr);
+				?></html>',$phoCode);
 			*/
 		/*$phoCode = str_replace("</html>",'<?php print_r($_smarty_tpl);?></html>',$phoCode);*/
 		return $phoCode;
@@ -118,11 +164,16 @@ class kod_web_page extends stdClass
 	public static function machiningHtml($_output, $template) {
 		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is', $_output, $match);
 		if (strpos($_output, '</head>') > -1) {
+			$existCss = array();// 排重，防止某些css地址被反复添加
 			foreach ($match[0] as $cssHtml) {
+				if (in_array($cssHtml, $existCss)) {
+					continue;
+				}
 				$_output = str_replace($cssHtml, '', $_output);
 				$_output = explode('<body>', $_output);
-				$_output[0] = str_replace('</head>', "\t" . $cssHtml . "\n</head>", $_output[0]);
+				$_output[0] = str_replace('</head>', $cssHtml . "</head>", $_output[0]);
 				$_output = implode('<body>', $_output);
+				$existCss[] = $cssHtml;
 			}
 		}
 		//		if(KOD_REWRITE_HTML_LINK){
