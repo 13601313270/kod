@@ -5,127 +5,127 @@
  * Date: 16/8/6
  * Time: 下午3:23
  */
-include_once KOD_DIR_NAME."/smarty/libs/Smarty.class.php";
+include_once KOD_DIR_NAME . "/smarty/libs/Smarty.class.php";
 include_once 'lessc.inc.php';
-class kod_web_page extends stdClass{
-	final public function __construct()
-	{
+class kod_web_page extends stdClass
+{
+	final public function __construct() {
 		$this->beforeRun();
 	}
 
-    protected $smartyPlutPath = KOD_SMARTY_PLUT_PATH;//自定义smarty插件目录
+	protected $smartyPlutPath = KOD_SMARTY_PLUT_PATH;//自定义smarty插件目录
 
-	public function beforeRun(){
+	public function beforeRun() {
 	}
-	public function beforeFetch(){
+	public function beforeFetch() {
 
 	}
-	public static function machiningTemplate($tpl_source, Smarty_Internal_Template $template){
-	    // 只有文件变化，才会触发
+	public static function machiningTemplate($tpl_source, Smarty_Internal_Template $template) {
+		// 只有文件变化，才会触发
 		//分解css
-        if(defined('KOD_SMARTY_CSS_DIR') && defined('KOD_SMARTY_CSS_HOST')) {
-			preg_match_all("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is",$tpl_source,$match);
+		if (defined('KOD_SMARTY_CSS_DIR') && defined('KOD_SMARTY_CSS_HOST')) {
+			preg_match_all("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is", $tpl_source, $match);
 			$cssHtmlArr = $match[2];
-			if(!empty($cssHtmlArr)){//如果匹配到了style内容
+			if (!empty($cssHtmlArr)) {//如果匹配到了style内容
 				//写入文件
 				$content = "";
-                foreach ($cssHtmlArr as $k => $cssHtml) {
-                    if ($match[1][$k] === ' lang="less"') {
-                        $less = new lessc;
-                        $cssHtml = $less->compile($cssHtml);
-                    } else {
-                        $cssHtml = str_replace("\n",'',$cssHtml);
-                        $cssHtml = str_replace("\t",'',$cssHtml);
-                        preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is",$cssHtml,$match2);
-                        foreach($match2[1] as $v){
-                            $cssHtml.='@-moz-keyframes '.$v;
-                            $cssHtml.='@-webkit-keyframes '.$v;
-                            $cssHtml.='@-o-keyframes '.$v;
-                        }
-                        preg_match_all("/animation\s*:\s*[^;]+[;|}]/is",$cssHtml,$match2);
-                        foreach($match2[0] as $v){
-                            $cssHtml.='-moz-'.$v;
-                            $cssHtml.='-webkit-'.$v;
-                            $cssHtml.='-o-'.$v;
-                        }
-                    }
-					$content .=$cssHtml;
+				foreach ($cssHtmlArr as $k => $cssHtml) {
+					if ($match[1][$k] === ' lang="less"') {
+						$less = new lessc;
+						$cssHtml = $less->compile($cssHtml);
+					} else {
+						$cssHtml = str_replace("\n", '', $cssHtml);
+						$cssHtml = str_replace("\t", '', $cssHtml);
+						preg_match_all("/@keyframes\s+(([^{|}]+?{\s*[^}]+?\s*})+\s*})/is", $cssHtml, $match2);
+						foreach ($match2[1] as $v) {
+							$cssHtml .= '@-moz-keyframes ' . $v;
+							$cssHtml .= '@-webkit-keyframes ' . $v;
+							$cssHtml .= '@-o-keyframes ' . $v;
+						}
+						preg_match_all("/animation\s*:\s*[^;]+[;|}]/is", $cssHtml, $match2);
+						foreach ($match2[0] as $v) {
+							$cssHtml .= '-moz-' . $v;
+							$cssHtml .= '-webkit-' . $v;
+							$cssHtml .= '-o-' . $v;
+						}
+					}
+					$content .= $cssHtml;
 				}
 				//array(KOD_DIR_NAME,'~KOD+'),
-				$fileName = str_replace(KOD_DIR_NAME,'~kod',$template->template_resource);
-				$fileName = str_replace(array(".tpl","/","."),array("","+","_"),$fileName).".css";
-				$file = fopen(KOD_SMARTY_CSS_DIR.$fileName,'w'); // a模式就是一种追加模式，如果是w模式则会删除之前的内容再添加
-				if($file===false){
-					throw new Exception("写入文件失败，请保证路径【".KOD_SMARTY_CSS_DIR."】存在，并有写入权限");
+				$fileName = str_replace(KOD_DIR_NAME, '~kod', $template->template_resource);
+				$fileName = str_replace(array(".tpl", "/", "."), array("", "+", "_"), $fileName) . ".css";
+				$file = fopen(KOD_SMARTY_CSS_DIR . $fileName, 'w'); // a模式就是一种追加模式，如果是w模式则会删除之前的内容再添加
+				if ($file === false) {
+					throw new Exception("写入文件失败，请保证路径【" . KOD_SMARTY_CSS_DIR . "】存在，并有写入权限");
 				}
-				fwrite($file,$content);
+				fwrite($file, $content);
 				fclose($file);
 				unset($file);
 				//获取可以访问生成css的url地址
-                $cssUrl = KOD_SMARTY_CSS_HOST . $fileName;
-				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="'.$cssUrl.'?'.time().'"/>';
-				if(strpos($tpl_source,'</head>')>-1){
-					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is","",$tpl_source);
-					$tpl_source = explode('<body>',$tpl_source);
-					$tpl_source[0] = str_replace('</head>',"\t".$cssLinkHtml."\n</head>",$tpl_source[0]);
-					$tpl_source = implode('<body>',$tpl_source);
-				}else{
-					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is",$cssLinkHtml,$tpl_source);
+				$cssUrl = KOD_SMARTY_CSS_HOST . $fileName;
+				$cssLinkHtml = '<link rel="stylesheet" type="text/css" href="' . $cssUrl . '?' . time() . '"/>';
+				if (strpos($tpl_source, '</head>') > -1) {
+					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is", "", $tpl_source);
+					$tpl_source = explode('<body>', $tpl_source);
+					$tpl_source[0] = str_replace('</head>', "\t" . $cssLinkHtml . "\n</head>", $tpl_source[0]);
+					$tpl_source = implode('<body>', $tpl_source);
+				} else {
+					$tpl_source = preg_replace("/<style( lang=[\"|']less[\"|'])?>(.*?)<\/style>/is", $cssLinkHtml, $tpl_source);
 				}
 
-			}else{
+			} else {
 			}
 		}
 		return $tpl_source;
 	}
-	public static function machiningPHP($phoCode, Smarty_Internal_Template $template){
+	public static function machiningPHP($phoCode, Smarty_Internal_Template $template) {
 		//将零散的css定义统一放到头部加载
-		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is',$phoCode,$match);
-		if(strpos($phoCode,'</head>')>-1){
-			foreach($match[0] as $cssHtml){
-				$phoCode = str_replace($cssHtml,'',$phoCode);
-				$phoCode = explode('<body>',$phoCode);
-				$phoCode[0] = str_replace('</head>',"\t".$cssHtml."\n</head>",$phoCode[0]);
-				$phoCode = implode('<body>',$phoCode);
+		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is', $phoCode, $match);
+		if (strpos($phoCode, '</head>') > -1) {
+			foreach ($match[0] as $cssHtml) {
+				$phoCode = str_replace($cssHtml, '', $phoCode);
+				$phoCode = explode('<body>', $phoCode);
+				$phoCode[0] = str_replace('</head>', "\t" . $cssHtml . "\n</head>", $phoCode[0]);
+				$phoCode = implode('<body>', $phoCode);
 			}
 		}
 
 		//将零散的js定义统一放到头部加载
-		preg_match_all('/<script type="text\/javascript" src="(.*?)"><\/script>/is',$phoCode,$match);
-		if(strpos($phoCode,'</head>')>-1){
-			foreach($match[0] as $jsHtml){
-				$phoCode = str_replace($jsHtml,'',$phoCode);
-				$phoCode = explode('<body>',$phoCode);
-				$phoCode[0] = str_replace('</head>',"\t".$jsHtml."\n</head>",$phoCode[0]);
-				$phoCode = implode('<body>',$phoCode);
+		preg_match_all('/<script type="text\/javascript" src="(.*?)"><\/script>/is', $phoCode, $match);
+		if (strpos($phoCode, '</head>') > -1) {
+			foreach ($match[0] as $jsHtml) {
+				$phoCode = str_replace($jsHtml, '', $phoCode);
+				$phoCode = explode('<body>', $phoCode);
+				$phoCode[0] = str_replace('</head>', "\t" . $jsHtml . "\n</head>", $phoCode[0]);
+				$phoCode = implode('<body>', $phoCode);
 
 			}
 		}
 
 		//增加上数据统计的信息
 		/*
-		$phoCode = str_replace("</html>",'<?php
-			$appendTestArr = array();
-		 	foreach($_smarty_tpl->smarty->template_objects as $k=>$v){
-		 		$appendTestArr[$k] = $v->tpl_vars;
-		 	}
-		 	echo kod_smarty_smarty::compilerTestAfter($appendTestArr);
-		 	?></html>',$phoCode);
-		*/
+			$phoCode = str_replace("</html>",'<?php
+				$appendTestArr = array();
+				 foreach($_smarty_tpl->smarty->template_objects as $k=>$v){
+					 $appendTestArr[$k] = $v->tpl_vars;
+				 }
+				 echo kod_smarty_smarty::compilerTestAfter($appendTestArr);
+				 ?></html>',$phoCode);
+			*/
 		/*$phoCode = str_replace("</html>",'<?php print_r($_smarty_tpl);?></html>',$phoCode);*/
 		return $phoCode;
 	}
-	public static function machiningHtml($_output,$template){
-		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is',$_output,$match);
-		if(strpos($_output,'</head>')>-1){
-			foreach($match[0] as $cssHtml){
-				$_output = str_replace($cssHtml,'',$_output);
-				$_output = explode('<body>',$_output);
-				$_output[0] = str_replace('</head>',"\t".$cssHtml."\n</head>",$_output[0]);
-				$_output = implode('<body>',$_output);
+	public static function machiningHtml($_output, $template) {
+		preg_match_all('/<link rel="stylesheet" type="text\/css" href="(.*?)"\/>/is', $_output, $match);
+		if (strpos($_output, '</head>') > -1) {
+			foreach ($match[0] as $cssHtml) {
+				$_output = str_replace($cssHtml, '', $_output);
+				$_output = explode('<body>', $_output);
+				$_output[0] = str_replace('</head>', "\t" . $cssHtml . "\n</head>", $_output[0]);
+				$_output = implode('<body>', $_output);
 			}
 		}
-//		if(KOD_REWRITE_HTML_LINK){
+		//		if(KOD_REWRITE_HTML_LINK){
 //			//把.php的文件，改为rewrite规则的文件
 //			preg_match_all("/(<a[^\>]*href=[\"|\'])(.*?)([\"|\'][^\>]*>)/",$_output,$matchLink);
 //			$_output = preg_replace_callback("/(<a[^\>]*href=[\"|\'])(.*?)([\"|\'][^\>]*>)/",function($matchLink){
@@ -139,26 +139,26 @@ class kod_web_page extends stdClass{
 //		}
 		return $_output;
 	}
-	public function fetchJSON(){
+	public function fetchJSON() {
 		$allData = array();
-		foreach($this as $k=>$v){
+		foreach ($this as $k => $v) {
 			$allData[$k] = $v;
 		}
 		echo json_encode($allData);
 	}
-	public function fetch($smartyTpl,$returnHtml=false){
+	public function fetch($smartyTpl, $returnHtml = false) {
 		spl_autoload_unregister('kod_ControlAutoLoad');
 		$this->beforeFetch();
 		$smartyObject = new kod_web_smarty();
-//		$smartyObject = new Smarty();
+		//		$smartyObject = new Smarty();
 
-//		$smartyObject->caching = true;
+		//		$smartyObject->caching = true;
 		if (!empty($this->smartyPlutPath)) {
 			$smartyObject->addPluginsDir($this->smartyPlutPath);
 		}
-		$smartyObject->registerFilter('pre',array($this,'machiningTemplate'));
-		$smartyObject->registerFilter('post',array($this,'machiningPHP'));
-		$smartyObject->registerFilter('output',array($this,'machiningHtml'));
+		$smartyObject->registerFilter('pre', array($this, 'machiningTemplate'));
+		$smartyObject->registerFilter('post', array($this, 'machiningPHP'));
+		$smartyObject->registerFilter('output', array($this, 'machiningHtml'));
 
 
 		$smartyObject->setCompileDir(KOD_SMARTY_COMPILR_DIR);//设置编译目录
@@ -166,12 +166,12 @@ class kod_web_page extends stdClass{
 		//$smartyObject->config_dir = "smarty/templates/config";//目录变量
 //		$smartyObject->setCacheDir("smarty/templates/cache"); //缓存文件夹
 
-		foreach($this as $k=>$v){
-			$smartyObject->assign($k,$v);
+		foreach ($this as $k => $v) {
+			$smartyObject->assign($k, $v);
 		}
-		if($returnHtml == true){
+		if ($returnHtml == true) {
 			return $smartyObject->fetch($smartyTpl);
-		}else{
+		} else {
 			$smartyObject->display($smartyTpl);
 		}
 	}
