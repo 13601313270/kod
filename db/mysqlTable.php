@@ -76,9 +76,23 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                         }
                         if (is_numeric($item[2])) {
                             if (in_array($item[0], ['group', 'desc', 'table', 'default', 'count', 'replace', 'order'])) {
-                                $returnSqlArr[] = '`' . $item[0] . '`' . $action . $item[2];
+                                $item0 = '`' . $item[0] . '`';
                             } else {
-                                $returnSqlArr[] = $item[0] . $action . $item[2];
+                                $item0 = $item[0];
+                            }
+                            $returnSqlArr[] = $item0 . $action . $item[2];
+                        } else if ($item[2] == null) {
+                            if (in_array($item[0], ['group', 'desc', 'table', 'default', 'count', 'replace', 'order'])) {
+                                $item0 = '`' . $item[0] . '`';
+                            } else {
+                                $item0 = $item[0];
+                            }
+                            if ($action == '=') {
+                                $returnSqlArr[] = $item0 . ' IS NULL';
+                            } else if ($action == '!=') {
+                                $returnSqlArr[] = $item0 . ' IS NOT NULL';
+                            } else {
+                                $returnSqlArr[] = $item0 . $action . $item[2];
                             }
                         } else {
                             if (in_array($item[0], ['group', 'desc', 'table', 'default', 'count', 'replace', 'order'])) {
