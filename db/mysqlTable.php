@@ -68,8 +68,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
         if ($arr && $arr[$mergeType]) {
             foreach ($arr[$mergeType] as $item) {
                 if (array_keys(array_keys($item)) === array_keys($item)) {
-                    if (in_array($item[1], ['=', '>', '<', '!=', '>=', '<=', 'like'])) {
-                        if ($item[1] === 'like') {
+                    if (in_array($item[1], ['=', '>', '<', '!=', '>=', '<=', 'like', 'not like'])) {
+                        if ($item[1] === 'like' || $item[1] === 'not like') {
                             $action = ' ' . $item[1] . ' ';
                         } else {
                             $action = $item[1];
@@ -216,6 +216,8 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                     $list = explode(' ', $k);
                     if ($list[1] === 'not' && $list[2] === 'in') {
                         $whereParams['and'][] = [$list[0], 'not in', $v];
+                    } else if ($list[1] === 'not' && $list[2] === 'like') {
+                        $whereParams['and'][] = [$list[0], 'not like', $v];
                     } else if (in_array($list[1], array('like', 'in'))) {
                         $whereParams['and'][] = [$list[0], $list[1], $v];
                     } else if (in_array(substr($k, -2), array('>=', '<=', '<>', '!='))) {
