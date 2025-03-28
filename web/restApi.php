@@ -292,6 +292,9 @@ abstract class kod_web_restApi
                 if (is_array($params)) {
                     echo json_encode($params);
                     exit;
+                } else if($params instanceof stdClass){
+                    echo json_encode($params);
+                    exit;
                 } else {
                     if ($params === true) {
                         echo 'true';
