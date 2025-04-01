@@ -81,7 +81,7 @@ class kod_db_mysqlTable extends kod_tool_lifeCycle
                                 $item0 = $item[0];
                             }
                             $returnSqlArr[] = $item0 . $action . $item[2];
-                        } else if ($item[2] == null) {
+                        } else if ($item[2] === null) {
                             if (in_array($item[0], ['group', 'desc', 'table', 'default', 'count', 'replace', 'order'])) {
                                 $item0 = '`' . $item[0] . '`';
                             } else {
