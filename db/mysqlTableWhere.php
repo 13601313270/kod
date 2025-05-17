@@ -39,7 +39,7 @@ function kod_or()
                 $list = explode(' ', $k);
                 if (in_array($list[1], array('like'))) {
                     $return['or'][] = [$list[0], $list[1], $v];
-                } else if (in_array(substr($k, -2), array('>=', '<=', '<>'))) {
+                } else if (in_array(substr($k, -2), array('>=', '<=', '<>', '!='))) {
                     $return['or'][] = [substr($k, 0, -2), substr($k, -2), $v];
                 } else if (in_array(substr($k, -1), array('>', '<'))) {
                     $return['or'][] = [substr($k, 0, -1), substr($k, -1), $v];
