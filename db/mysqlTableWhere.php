@@ -1,12 +1,4 @@
 <?php
-
-/**
- * Created by PhpStorm.
- * User: mfw
- * Date: 16/5/9
- * Time: 下午8:10
- */
-
 function kod_and()
 {
     $return = array(
@@ -20,7 +12,7 @@ function kod_and()
                 $list = explode(' ', $k);
                 if (in_array($list[1], array('like'))) {
                     $return['and'][] = [$list[0], $list[1], $v];
-                } else if (in_array(substr($k, -2), array('>=', '<=', '<>'))) {
+                } else if (in_array(substr($k, -2), array('>=', '<=', '<>', '!='))) {
                     $return['and'][] = [substr($k, 0, -2), substr($k, -2), $v];
                 } else if (in_array(substr($k, -1), array('>', '<'))) {
                     $return['and'][] = [substr($k, 0, -1), substr($k, -1), $v];
